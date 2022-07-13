@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>杂谈 on Even - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/tags/%E6%9D%82%E8%B0%88/</link>
+    <description>Recent content in 杂谈 on Even - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 21 Mar 2022 01:24:33 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/%E6%9D%82%E8%B0%88/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>《新蝙蝠侠》-哥谭的黑夜</title>
+      <link>http://localhost:1313/post/thebatman/</link>
+      <pubDate>Mon, 21 Mar 2022 01:24:33 +0800</pubDate>
+      
+      <guid>http://localhost:1313/post/thebatman/</guid>
+      <description>作为蝙蝠侠系列的新重启之作，罗伯特·帕丁森向我们展示了一个极度愤怒、阴郁的蝙蝠侠形象。影片前期，他完全笼罩在复仇的阴影中，自称“复仇者（th</description>
+    </item>
+    
+  </channel>
+</rss>

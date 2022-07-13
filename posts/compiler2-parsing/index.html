@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <script type="text/javascript" src="https://latest.cactus.chat/cactus.js"></script>
+  <link rel="stylesheet" href="https://latest.cactus.chat/style.css" type="text/css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title> Compiler(2)-Parsing | Hello World</title>
+  <link rel = 'canonical' href = 'https://bikeknight.top/posts/compiler2-parsing/'>
+  <meta name="description" content="Do not go gentle into that good night.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="Compiler(2)-Parsing" />
+<meta property="og:description" content="Parsing（语法分析） Intro to parsing 语法分析的作用：接受来自lexer的token序列，然后生成代码的解析树，检查token序列是否符合规定的文法。
+Context-Free Grammars（上下文无关文法） Parser需要一种方式区别哪些token是合法的，哪些是不合法的。
+编程语言本身具有自然递归的结构，比如一个表达式：
+if EXPR then EXPR else EXPR fi --&gt; if expression while EXPR loop EXPR pool --&gt; while expression 上下文无关文法就是描述这种递归结构的一种自然符号。
+上下文无关文法的组成：
+ 终结符号（terminals）集合 $T$ 非终结符号（non-terminals）集合 $N$ 一个起始符号 $S \in N $ 产生式（productions，也可以理解为规则）集合 $X \rightarrow Y_1Y_2Y_3&hellip; ( X \in N, \ Y \in (T \ \cup N \ \cup {\epsilon} )$  推导过程：
+ 从起始符号 $S$ 开始推导 在产生式中用右边的 $Y_n $ 替换掉左边的非终结符号 $X$ 重复（2）直到没有非终结符号  在编程语言中，token就被当作是终结符，例如：" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://bikeknight.top/posts/compiler2-parsing/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-01-27T14:55:21+08:00" />
+<meta property="article:modified_time" content="2022-01-27T14:55:21+08:00" />
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Compiler(2)-Parsing"/>
+<meta name="twitter:description" content="Parsing（语法分析） Intro to parsing 语法分析的作用：接受来自lexer的token序列，然后生成代码的解析树，检查token序列是否符合规定的文法。
+Context-Free Grammars（上下文无关文法） Parser需要一种方式区别哪些token是合法的，哪些是不合法的。
+编程语言本身具有自然递归的结构，比如一个表达式：
+if EXPR then EXPR else EXPR fi --&gt; if expression while EXPR loop EXPR pool --&gt; while expression 上下文无关文法就是描述这种递归结构的一种自然符号。
+上下文无关文法的组成：
+ 终结符号（terminals）集合 $T$ 非终结符号（non-terminals）集合 $N$ 一个起始符号 $S \in N $ 产生式（productions，也可以理解为规则）集合 $X \rightarrow Y_1Y_2Y_3&hellip; ( X \in N, \ Y \in (T \ \cup N \ \cup {\epsilon} )$  推导过程：
+ 从起始符号 $S$ 开始推导 在产生式中用右边的 $Y_n $ 替换掉左边的非终结符号 $X$ 重复（2）直到没有非终结符号  在编程语言中，token就被当作是终结符，例如："/>
+
+  
+  
+    
+  
+  
+  <link rel="stylesheet" href="https://bikeknight.top/css/styles.c05d68261bf086a9d7713c4f8a6215a3601608e267a816a7ee58f139b3d1aae51222aae2081c8e0c6bd35e1334773b7a16283022f31f92afd93bb37e5e822e66.css" integrity="sha512-wF1oJhvwhqnXcTxPimIVo2AWCOJnqBan7ljxObPRquUSIqriCByODGvTXhM0dzt6FigwIvMfkq/ZO7N&#43;XoIuZg=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+
+  
+<link rel="icon" type="image/png" href="https://bikeknight.top/images/favicon.ico" />
+
+  
+  
+  
+  
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+  <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;" aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li>
+          <a class="icon" href=" https://bikeknight.top/about/" aria-label="Previous">
+            <i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i>
+          </a>
+        </li>
+        
+        
+        <li>
+          <a class="icon" href="https://bikeknight.top/posts/compiler3-semantic_analysis/" aria-label="Next">
+            <i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i>
+          </a>
+        </li>
+        
+        <li>
+          <a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+            <i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i>
+          </a>
+        </li>
+        <li>
+          <a class="icon" href="#" aria-label="Share">
+            <i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i>
+          </a>
+        </li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f" aria-label="Facebook">
+      <i class="fab fa-facebook " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&text=Compiler%282%29-Parsing" aria-label="Twitter">
+      <i class="fab fa-twitter " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&title=Compiler%282%29-Parsing" aria-label="Linkedin">
+      <i class="fab fa-linkedin " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&is_video=false&description=Compiler%282%29-Parsing" aria-label="Pinterest">
+      <i class="fab fa-pinterest " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Compiler%282%29-Parsing&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f" aria-label="Email">
+      <i class="fas fa-envelope " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&title=Compiler%282%29-Parsing" aria-label="Pocket">
+      <i class="fab fa-get-pocket " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&title=Compiler%282%29-Parsing" aria-label="reddit">
+      <i class="fab fa-reddit " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&name=Compiler%282%29-Parsing&description=Parsing%ef%bc%88%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90%ef%bc%89%20Intro%20to%20parsing%20%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90%e7%9a%84%e4%bd%9c%e7%94%a8%ef%bc%9a%e6%8e%a5%e5%8f%97%e6%9d%a5%e8%87%aalexer%e7%9a%84token%e5%ba%8f%e5%88%97%ef%bc%8c%e7%84%b6%e5%90%8e%e7%94%9f%e6%88%90%e4%bb%a3%e7%a0%81%e7%9a%84%e8%a7%a3%e6%9e%90%e6%a0%91%ef%bc%8c%e6%a3%80%e6%9f%a5token%e5%ba%8f%e5%88%97%e6%98%af%e5%90%a6%e7%ac%a6%e5%90%88%e8%a7%84%e5%ae%9a%e7%9a%84%e6%96%87%e6%b3%95%e3%80%82%0aContext-Free%20Grammars%ef%bc%88%e4%b8%8a%e4%b8%8b%e6%96%87%e6%97%a0%e5%85%b3%e6%96%87%e6%b3%95%ef%bc%89%20Parser%e9%9c%80%e8%a6%81%e4%b8%80%e7%a7%8d%e6%96%b9%e5%bc%8f%e5%8c%ba%e5%88%ab%e5%93%aa%e4%ba%9btoken%e6%98%af%e5%90%88%e6%b3%95%e7%9a%84%ef%bc%8c%e5%93%aa%e4%ba%9b%e6%98%af%e4%b8%8d%e5%90%88%e6%b3%95%e7%9a%84%e3%80%82%0a%e7%bc%96%e7%a8%8b%e8%af%ad%e8%a8%80%e6%9c%ac%e8%ba%ab%e5%85%b7%e6%9c%89%e8%87%aa%e7%84%b6%e9%80%92%e5%bd%92%e7%9a%84%e7%bb%93%e6%9e%84%ef%bc%8c%e6%af%94%e5%a6%82%e4%b8%80%e4%b8%aa%e8%a1%a8%e8%be%be%e5%bc%8f%ef%bc%9a%0aif%20EXPR%20then%20EXPR%20else%20EXPR%20fi%20--%26gt%3b%20if%20expression%20while%20EXPR%20loop%20EXPR%20pool%20--%26gt%3b%20while%20expression%20%e4%b8%8a%e4%b8%8b%e6%96%87%e6%97%a0%e5%85%b3%e6%96%87%e6%b3%95%e5%b0%b1%e6%98%af%e6%8f%8f%e8%bf%b0%e8%bf%99%e7%a7%8d%e9%80%92%e5%bd%92%e7%bb%93%e6%9e%84%e7%9a%84%e4%b8%80%e7%a7%8d%e8%87%aa%e7%84%b6%e7%ac%a6%e5%8f%b7%e3%80%82%0a%e4%b8%8a%e4%b8%8b%e6%96%87%e6%97%a0%e5%85%b3%e6%96%87%e6%b3%95%e7%9a%84%e7%bb%84%e6%88%90%ef%bc%9a%0a%20%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%ef%bc%88terminals%ef%bc%89%e9%9b%86%e5%90%88%20%24T%24%20%e9%9d%9e%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%ef%bc%88non-terminals%ef%bc%89%e9%9b%86%e5%90%88%20%24N%24%20%e4%b8%80%e4%b8%aa%e8%b5%b7%e5%a7%8b%e7%ac%a6%e5%8f%b7%20%24S%20%5cin%20N%20%24%20%e4%ba%a7%e7%94%9f%e5%bc%8f%ef%bc%88productions%ef%bc%8c%e4%b9%9f%e5%8f%af%e4%bb%a5%e7%90%86%e8%a7%a3%e4%b8%ba%e8%a7%84%e5%88%99%ef%bc%89%e9%9b%86%e5%90%88%20%24X%20%5crightarrow%20Y_1Y_2Y_3%26hellip%3b%20%28%20X%20%5cin%20N%2c%20%5c%20Y%20%5cin%20%28T%20%5c%20%5ccup%20N%20%5c%20%5ccup%20%7b%5cepsilon%7d%20%29%24%20%20%e6%8e%a8%e5%af%bc%e8%bf%87%e7%a8%8b%ef%bc%9a%0a%20%e4%bb%8e%e8%b5%b7%e5%a7%8b%e7%ac%a6%e5%8f%b7%20%24S%24%20%e5%bc%80%e5%a7%8b%e6%8e%a8%e5%af%bc%20%e5%9c%a8%e4%ba%a7%e7%94%9f%e5%bc%8f%e4%b8%ad%e7%94%a8%e5%8f%b3%e8%be%b9%e7%9a%84%20%24Y_n%20%24%20%e6%9b%bf%e6%8d%a2%e6%8e%89%e5%b7%a6%e8%be%b9%e7%9a%84%e9%9d%9e%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%20%24X%24%20%e9%87%8d%e5%a4%8d%ef%bc%882%ef%bc%89%e7%9b%b4%e5%88%b0%e6%b2%a1%e6%9c%89%e9%9d%9e%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%20%20%e5%9c%a8%e7%bc%96%e7%a8%8b%e8%af%ad%e8%a8%80%e4%b8%ad%ef%bc%8ctoken%e5%b0%b1%e8%a2%ab%e5%bd%93%e4%bd%9c%e6%98%af%e7%bb%88%e7%bb%93%e7%ac%a6%ef%bc%8c%e4%be%8b%e5%a6%82%ef%bc%9a" aria-label="Tumblr">
+      <i class="fab fa-tumblr " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&t=Compiler%282%29-Parsing" aria-label="Hacker News">
+      <i class="fab fa-hacker-news " aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+    
+    <div id="toc">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#重新定义文法">重新定义文法</a></li>
+    <li><a href="#优先级与结合性声明">优先级与结合性声明</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#intro-1">Intro</a></li>
+    <li><a href="#代码实现">代码实现</a></li>
+    <li><a href="#左递归left-recursion">左递归（Left Recursion）</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#intro--ll1文法">Intro &amp; LL(1)文法</a></li>
+    <li><a href="#构造解析表">构造解析表</a>
+      <ul>
+        <li><a href="#first集">First集</a></li>
+        <li><a href="#follow集">Follow集</a></li>
+        <li><a href="#构造ll1-解析表">构造LL(1) 解析表</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <ul>
+    <li><a href="#intro-2">Intro</a></li>
+    <li><a href="#shift-reduce-parsing移位归约解析">Shift-Reduce Parsing（移位归约解析）</a></li>
+    <li><a href="#handles句柄">Handles（句柄）</a></li>
+    <li><a href="#可行前缀--item">可行前缀 &amp; Item</a></li>
+    <li><a href="#识别可行前缀">识别可行前缀</a></li>
+    <li><a href="#slr解析算法">SLR解析算法</a>
+      <ul>
+        <li><a href="#basic">Basic</a></li>
+        <li><a href="#improvements">Improvements</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+    
+  </span>
+</div>
+
+
+  <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+      <h1 class="posttitle" itemprop="name headline">
+        Compiler(2)-Parsing
+      </h1>
+      <div class="meta">
+        
+        <div class="postdate">
+          
+          <time datetime="2022-01-27 14:55:21 &#43;0800 CST" itemprop="datePublished">2022-01-27</time>
+          
+        </div>
+        
+        
+        
+        
+        <div class="article-tag">
+            <i class="fas fa-tag"></i>
+            
+            
+            <a class="tag-link" href="/tags/compiler" rel="tag">Compiler</a>
+            
+        </div>
+        
+      </div>
+    </header>
+
+  
+    
+    <div class="content" itemprop="articleBody">
+      <h1 id="parsing语法分析">Parsing（语法分析）</h1>
+<h1 id="intro-to-parsing">Intro to parsing</h1>
+<p>语法分析的作用：接受来自lexer的token序列，然后生成代码的解析树，检查token序列是否符合规定的文法。</p>
+<h1 id="context-free-grammars上下文无关文法">Context-Free Grammars（上下文无关文法）</h1>
+<p>Parser需要一种方式区别哪些token是合法的，哪些是不合法的。</p>
+<p>编程语言本身具有自然递归的结构，比如一个表达式：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">if EXPR then EXPR else EXPR fi --&gt; if expression
+while EXPR loop EXPR pool --&gt; while expression
+</code></pre><p><strong>上下文无关文法</strong>就是描述这种递归结构的一种自然符号。</p>
+<p>上下文无关文法的组成：</p>
+<ul>
+<li>终结符号（terminals）集合 $T$</li>
+<li>非终结符号（non-terminals）集合 $N$</li>
+<li>一个起始符号 $S \in N $</li>
+<li>产生式（productions，也可以理解为规则）集合 $X \rightarrow Y_1Y_2Y_3&hellip; ( X \in N, \ Y \in (T \ \cup N \ \cup {\epsilon} )$</li>
+</ul>
+<p>推导过程：</p>
+<ol>
+<li>从起始符号 $S$ 开始推导</li>
+<li>在产生式中用右边的 $Y_n $ 替换掉左边的非终结符号 $X$</li>
+<li>重复（2）直到没有非终结符号</li>
+</ol>
+<p>在编程语言中，token就被当作是终结符，例如：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">EXPR -&gt; if EXPR then EXPR else EXPR fi
+        while EXPR loop EXPR pool
+        id
+        ...
+------------------------------------------
+if id then id else id fi
+while id loop id pool
+if while id loop id pool then id else id fi
+...
+</code></pre><pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; E + E
+     E * E
+     (E)
+     id
+------------------------------------------
+id + id
+id * id
+(id + id) * id
+...
+</code></pre><h1 id="derivations推导">Derivations（推导）</h1>
+<p>Derivation是上下文无关文法的<strong>推导过程</strong>，可以以“解析树”的形式来表示：</p>
+<ul>
+<li>起始符号就是根节点</li>
+<li>产生式右边的符号是子节点</li>
+</ul>
+<p>例如：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">Garmmar: E -&gt; E+E | E*E | (E) | id
+String: id * id + id
+</code></pre><p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image.png" alt=""></p>
+<p>上面的推导过程是left-most 推导，即每次替换的时候优先替换最左边的非终结符；同样的，还有right-most推导：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E = E + E
+  = E + id
+  = E * E + id
+  = E * id + id
+  = id * id + id
+</code></pre><p>需要注意的一点是：一个推导对应着一个解析树，但是一个解析树可以有许多个推导。</p>
+<h1 id="ambiguity歧义性">Ambiguity（歧义性）</h1>
+<h2 id="intro">Intro</h2>
+<p><code>id * id + id</code> 有两个解析树，实际上就是处理 <code>*</code> 和 <code>+</code> 的顺序不同导致的：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_1.png" alt=""></p>
+<p>如果一个文法可产生多个解析树，那么这个文法就具有歧义性，这种歧义性是不好的。</p>
+<h2 id="重新定义文法">重新定义文法</h2>
+<p>消除歧义性的一种方式就是重新定义文法，让文法可以只可以产生一个正确的解析树，例如：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; E' + E | E'
+E' -&gt; id | id * E' | (E) * E' | (E)
+-----------------------------------
+id * id + id
+E = E' + E
+  = id * E' + E
+  = id * id + E
+  = id * id + E'
+  = id * id + id
+
+</code></pre><p>对文法进行分层，让E控制<code>+</code>，E' 控制 <code>*</code> ：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; E'+E -&gt; E'+E'+E -&gt; E'+E'+E'+E -&gt; ... -&gt; E'+E'+E'+...+E'
+E' -&gt; id*E' -&gt; id*id*E' + id*id*id*E' -&gt; ... -&gt; id*id*id*...*id
+E' -&gt; (E)*E' -&gt; ... -&gt; (E)*(E)*(E)*...*(E)
+</code></pre><p>通过这样的方式，就可以达到 <code>+</code> 在 <code>*</code> 之前生成：带 <code>*</code> 的子树比带 <code>+</code> 号的子树更深。</p>
+<p>再来看一个例子，考虑下面的文法：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; if E then E
+  -&gt; if E then E else E
+  -&gt; OTHER
+
+</code></pre><p>对于表达式<code>if E1 then if E2 then E3 else E4</code> 来说，会产生两个解析树（取决于else关键字归哪个if）：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_2.png" alt=""></p>
+<p>我们规定，else和离它最近的if匹配，那么可以考虑把if分为两类：有else匹配的if（MIF）和没有else匹配的if（UIF）。</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; MIF | UIF
+MIF -&gt; if E then MIF else MIF  /* all 'then'('if') are matched */
+UIF -&gt; if E then E             /* some 'then'('if') is unmatched */
+    -&gt; if E then MIF else UIF
+
+</code></pre><p>不幸的是，对于一个具有歧义性的文法，不能自动将它转换成无歧义性的文法，这个转换需要人来手动完成，并且，通过这种方式，会产生一个更复杂的文法，所以大多数编译器通常采用下面即将介绍的方法来消除歧义性。</p>
+<h2 id="优先级与结合性声明">优先级与结合性声明</h2>
+<p>对于文法：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; E+E | E*E | int
+For string: int+int*int
+</code></pre><p>为了消除歧义性，我们可以给出优先级和结合性的声明，指出 <code>*</code> 的优先级大于 <code>+</code> 号，且两者都是左结合的：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">%left +
+%left *
+</code></pre><h1 id="rda递归下降分析">RDA（递归下降分析）</h1>
+<h2 id="intro-1">Intro</h2>
+<p>递归下降分析是一种自上而下（top-bottom）的分析算法，这种分析方法为<strong>每一个非终结符都构建一个分析函数</strong>，在给定一个待分析的字符串的时候：</p>
+<ul>
+<li>如果在文法中遇到了非终结符号 A，则调用其分析函数 A()，这个分析函数的作用就是把该非终结符号替换成对应产生式中的终结符。</li>
+<li>如果在文法中遇到了终结符号 a，则判断 if(当前字符输入 == a) ，如果成立，则读取下一个字符，如果不成立，则error，并向上回溯到上个非终结符的位置。</li>
+</ul>
+<p>文字描述非常不直观，下面是一个例子：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; T | T+E
+T -&gt; int | int*T | (E)
+------------------------------
+For String: (int)
+
+</code></pre><p>第一次首先读入字符串的第一个字符 ( ，然后对文法进行递归下降分析：</p>
+<ol>
+<li>首先读入第一个文法 E → T ，T 本身是非终结符，继续进行替换，得到 E → T → int，然后和读入的字符串 ( 匹配，显然 int无与之匹配成功，所以回溯到上个非终结符T。</li>
+<li>接着对T进行替换，得到 E → T → int * T ，无法匹配，再次回溯到 T 。</li>
+<li>在进行替换，得到 E → T → ( E )，( 可以匹配成功，于是读取字符串的下一个输入。</li>
+<li>读取到 int 之后，又碰到了非终结符号 E，于是再进行替换，得到 E → T → ( T ) 。</li>
+<li>T 仍是个非终结符号，继续替换，得到 E → T → ( int ) ，匹配成功。</li>
+</ol>
+<p>函数的递归调用，实际上就是构建解析树的过程。</p>
+<h2 id="代码实现">代码实现</h2>
+<p>比较容易实现：</p>
+<p><a href="https://github.com/F4ded/Complier-Algorithm/tree/master/src/main/java/parsing/rda">https://github.com/F4ded/Complier-Algorithm/tree/master/src/main/java/parsing/rda</a></p>
+<p>RDA算法有一定的局限性，以上面的文法为例，如果要匹配 int*int字符串的话：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">for the first token 'int':
+  E -&gt; T -&gt; int
+  T1 returns true -&gt; T returns true -&gt; E returns true
+</code></pre><p>第一个int匹配成功，但是无法再向后匹配（因为函数已经返回true），尽管T可以推导出int * T，但是在算法的实现中，匹配却失败了。</p>
+<p>那么该如何解决呢？除了重写文法之外，另外一种解决方式是<a href="https://www.wolai.com/q7MN8hzQLkwx1Yvk2mnT1a">Predictive Parsing（预测解析）</a>。</p>
+<h2 id="左递归left-recursion">左递归（Left Recursion）</h2>
+<p>左递归文法： $S \rightarrow^+ Sa $</p>
+<p>递归下降分析无法处理这样的左递归文法（会陷入到no-terminals的循环中），比如下面这个文法：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">S -&gt; Sa | b
+</code></pre><p>我们可以推导得到<strong>一个b后面根多个a的字符串</strong>：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">Sa -&gt; Saa -&gt; Saaa -&gt; ... -&gt; Saaa... -&gt; baaa...
+</code></pre><p>但是使用递归下降分析是无法得到的，因为这种分析方法是left - right运行的（首先会读取文法的第一条），如果left一侧产生递归，就会陷入无限的循环中。</p>
+<p>所以递归下降分析要消除左递归，我们可以把上面的文法写成：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">S -&gt; bS'
+S' -&gt; aS' | ε
+</code></pre><p>通常来说，对于下面形式的左递归文法：
+$$
+S \rightarrow S\alpha \ | \ &hellip; \ | \ S\alpha_n \ | \ \beta \ | \ &hellip; \ | \ \beta_n
+$$</p>
+<p>可以改写成下面的右递归形式：
+$$
+S \rightarrow \beta_1S' \ | \ &hellip; \ | \ \beta_nS' \S' \rightarrow \alpha_1S' \ | \ &hellip; \ | \ \alpha_nS' \ | \ \epsilon
+$$</p>
+<h1 id="predictive-parsing预测解析">Predictive Parsing（预测解析）</h1>
+<h2 id="intro--ll1文法">Intro &amp; LL(1)文法</h2>
+<p>预测解析和递归下降分析都属于Top-Bottom Parsing，但是区别在于：</p>
+<ul>
+<li>会look-ahead一部分token，用于预测使用哪一个文法</li>
+<li>没有回溯操作</li>
+</ul>
+<p>适用于预测解析的文法相对固定，是一种叫做LL(k) 的文法：</p>
+<ul>
+<li>第一个L代表left-to-right</li>
+<li>第二个L代表left-most-derivation，即从左开始构建解析树</li>
+<li>k代表向前看的token的个数，理论上k可以是任何数，但在实践中k=1（in general）</li>
+</ul>
+<p>在解析的过程中，PP会向前提前读取一个token，然后根据这个token来选择文法中的哪一个产生式（<strong>必须产生一个选择</strong>）。</p>
+<p><strong>并不是所有文法都可以转换为LL(1)文法，最直观的判断方法是：</strong></p>
+<ul>
+<li><strong>文法的解析表中的entry如果有两个或以上的生产式，就一定不是LL(1) 文法</strong></li>
+<li><strong>任何左递归的文法都不是LL(1) 文法</strong></li>
+<li><strong>任何无法通过提取左因的方式进行转换的文法都不是LL(1) 文法</strong></li>
+<li><strong>任何具有歧义性的文法也不是LL(1) 文法</strong></li>
+</ul>
+<p>以前文示例文法为例，并不符合LL(1) 文法的条件，因为E和T都有具有<strong>相同前缀</strong>的产生式，对于这种文法，可以使用<strong>提取左因</strong>的方式来进行转换：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; TX
+X -&gt; ε | +E
+T -&gt; intY | (E)
+Y -&gt; ε | *T
+</code></pre><p>然后通过这个文法构造解析表（构造解析表的算法会在下一节提到）：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_3.png" alt=""></p>
+<p>预测解析的方法：</p>
+<ul>
+<li>解析树上的左非终结符S</li>
+<li>token流中的即将输入的下一个token</li>
+<li>查表 [S, token]</li>
+</ul>
+<p>此外，还用到来栈来记录在构建解析树过程中到边界（即叶子节点），这个栈中会记录：</p>
+<ul>
+<li>还未展开的非终结符</li>
+<li>还未匹配的终结符</li>
+<li><strong>栈顶</strong>始终记录：最左终结符或最左非终结符</li>
+</ul>
+<p>预测解析没有回溯机制，遇到error就会解析失败，直到输入的token流读取完毕，且栈为空的时候才算解析成功。</p>
+<p>算法描述如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Java" data-lang="Java">init_stack = &lt;S, $&gt; and next
+<span style="color:#447fcf">while</span>(stack is empty) {
+  <span style="color:#6ab825;font-weight:bold">case</span> stack of:
+    <span style="color:#999;font-style:italic">/* No-terminals */</span>
+    &lt;X, rest&gt;: {
+      <span style="color:#6ab825;font-weight:bold">if</span>(T[X, *next] = Y1...<span style="color:#bbb">Yn</span>) {
+        stack.<span style="color:#bbb">pop</span>(X)
+        <span style="color:#999;font-style:italic">/* current stack: &lt;Y1...Yn, rest&gt; */</span>
+        stack.<span style="color:#bbb">push</span>(Y1...<span style="color:#bbb">Yn</span>)
+      } <span style="color:#6ab825;font-weight:bold">else</span> {
+        error()
+      }
+    }
+    <span style="color:#999;font-style:italic">/* Terminals or Token-End */</span>
+    &lt;x, rest&gt;: {
+      <span style="color:#6ab825;font-weight:bold">if</span>(x==*next++) {
+        <span style="color:#999;font-style:italic">/* current stack: &lt;rest&gt; */</span>
+        stack.<span style="color:#bbb">pop</span>(x)
+      } <span style="color:#6ab825;font-weight:bold">else</span> {
+        error()
+      }
+    }
+}
+
+</code></pre></div><p>此时我们就可以解决在RDA中遗留的解析int*int的问题了（$符号用来表示token流的结尾）：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220112_210001_com.newskyer.draw.png" alt=""></p>
+<h2 id="构造解析表">构造解析表</h2>
+<h3 id="first集">First集</h3>
+<h4 id="definition">Definition</h4>
+<p>$First(\alpha)$ 可以看作是：从 $\alpha $ 开始推导，可以得到的<strong>首个终结符与</strong>$\epsilon$的集合。例如，$\alpha \rightarrow^* t\beta$ （* 号指可以经过多次推导），那么 $t \in First(\alpha)$。</p>
+<p>First集的完整定义为：$First(X) = {t \ | \ X\rightarrow^* t\alpha} \ \cup \ { \epsilon \ | \ X\rightarrow^* \epsilon }$ （注意后半部分，如果X经过多次推导可以得到 $\epsilon$ ，那么 $\epsilon $ 也属于X的First集）</p>
+<p>其构造算法如下：</p>
+<ul>
+<li>对于任意终结符 $t$ ，$First(t) = {t}$</li>
+<li>对于任意非终结符 $X$，如果 $\epsilon \in First(X)$，则需要满足下面其中一点：
+<ul>
+<li>$X \rightarrow \epsilon$</li>
+<li>$X \rightarrow A_1A_2&hellip;A_n$且 $\epsilon \in First(A_{i(1\leq i \leq n)})$</li>
+</ul>
+</li>
+<li>对于任意非终结符 $X$ 和产生式 $X \rightarrow A_1A_2&hellip;A_n\alpha$：
+<ul>
+<li>当 $\epsilon \in First(A_{i(1\leq i \leq n)})$ ，则 $First(\alpha) \subseteq First(X)$</li>
+</ul>
+</li>
+</ul>
+<h4 id="example">Example</h4>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220114_170433_com.newskyer.draw.jpg" alt=""></p>
+<h3 id="follow集">Follow集</h3>
+<h4 id="definition-1">Definition</h4>
+<p>$Follow(X)$ 可以看作是在推导中紧跟在$X$ 后面的<strong>终结符</strong>的集合。</p>
+<p>其完整定义为：$Follow(X) = { t \ | \ S\rightarrow^* \beta Xt \delta }$</p>
+<p>生产式 $X \rightarrow AB$，可以得到：</p>
+<ul>
+<li>$First(B) \subseteq Follow(A)$</li>
+<li>$Follow(X) \subseteq Follow(B)$，意思就是含X的生产式中直接把X替换成AB，那么原来Follow X的元素就变成了Follow B的元素</li>
+<li>如果 $\epsilon \in First(B)$ ，则 $Follow(X) \subseteq Follow(A)$</li>
+</ul>
+<p>特殊情况：$$ \in Follow(S)$ ，S是开始推导的非终结符，$ 表示token流的结尾</p>
+<p>其构造算法如下：</p>
+<ul>
+<li>$$ \in Follow(S)$</li>
+<li>对于生产式 $A \rightarrow \alpha X \beta$ ：
+<ul>
+<li>$First(\beta) - {\epsilon} \subseteq Follow(X)$</li>
+<li>如果 $\epsilon \in First(\beta)$ ，那么 $Follow(A) \subseteq Follow(X)$</li>
+</ul>
+</li>
+</ul>
+<h4 id="example-1">Example</h4>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220114_180503_com.newskyer.draw.png" alt=""></p>
+<h3 id="构造ll1-解析表">构造LL(1) 解析表</h3>
+<h4 id="构造规则">构造规则</h4>
+<p>遍历LL(1) 文法中的每一条生产式（形如 $A \rightarrow \alpha$）：</p>
+<ul>
+<li>遍历所有终结符$t$ ：
+<ul>
+<li>如果 $t \in First(\alpha)$ ，则 T[A, t] = $\alpha$</li>
+<li>如果 $t \notin First(\alpha)$ ，但是 $\epsilon \in First(\alpha)$ 且 $t \in Follow(A)$ ，则T[A, t] = $\alpha$</li>
+</ul>
+</li>
+<li>特殊情况，解析完token之后，栈内只剩<strong>最左非终结符A</strong>和 <strong>$</strong> ：
+<ul>
+<li>$$ \in Follow(A)$ 并且 $\epsilon \in First(\alpha)$ ，则 T[A,$ ] = $\alpha$</li>
+</ul>
+</li>
+</ul>
+<p>说一下我对上述构造方法的理解，首先，解析表的两个维度分别是非终结符 $A$ 和下一个输入的token $t $：</p>
+<ul>
+<li>如果A可以经过一系列推导直接得到 t（对应 $t \in First(\alpha)$），那么毫无疑问T[A, t] = $\alpha$</li>
+<li>如果A经过一系列推导得不到t，那么可以考虑生产式是不是$S \rightarrow \beta At \delta$ 这种形式，如果A可以推导出$\epsilon$ 的话，那么说明可以消除A这个非终结符（对应$\epsilon \in First(\alpha)$），且在满足$t \in Follow(A)$（在生产式中t可以经过推导成为A的后继），那么在表中写入 T[A, t] = $\alpha$</li>
+<li>最后一种特殊情况，在解析完token流之后，栈最后会剩下最左非终结符和 $ ，首先要满足这个非终结符可以作为末尾（对应$$ \in Follow(A)$），然后我们还要把A消除，那么就要满足A可以推导成为$\epsilon $ （$\epsilon \in First(\alpha)$）</li>
+<li><strong>最后备注</strong>，这里的 $\alpha$ 不仅仅指的是生产式中的特定的某一个符号，也只某个符号集合（$A_1A_2&hellip;A_n $），当它表示后者的时候，如果要计算其First集，就要遍历其中的每一个符号：
+<ul>
+<li>当满足 $\epsilon \in First(A_{i(1\leq i \leq n)})$ 的时候， $\epsilon \in First(\alpha)$</li>
+<li>如果 $\epsilon \notin First(A_k)$ ，那么 $First(\alpha) = First(A_1) + &hellip; + First(A_k) - {\epsilon}$</li>
+</ul>
+</li>
+</ul>
+<h4 id="代码实现-1">代码实现</h4>
+<p><a href="https://github.com/F4ded/Complier-Algorithm/tree/master/src/main/java/parsing/pp">https://github.com/F4ded/Complier-Algorithm/tree/master/src/main/java/parsing/pp</a></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> 计算First集和Follow集</li>
+<li><input checked="" disabled="" type="checkbox"> 构造解析表</li>
+<li><input checked="" disabled="" type="checkbox"> 解析LL1文法</li>
+</ul>
+<h1 id="bottom-top-parsing自下而上解析">Bottom-Top Parsing（自下而上解析）</h1>
+<h2 id="intro-2">Intro</h2>
+<p>相比于递归下降分析和预测解析，自下而上解析是一种更加通用，在编译器中会被优先选择的解析方式，它同样高效，且适用范围更广，自下而上解析不需要对文法进行提取左因，但仍需要定义优先级（自下而上解析也无法处理具有歧义性的文法）。</p>
+<p>自下而上解析的解析方式为<strong>归约（<em><strong><strong>Reduction</strong></strong></em>）</strong>，简单来说，是通过<strong>Token序列</strong>逆推<strong>非终结符</strong>的过程。<strong>这种解析方式有一个重要的特点：它是right-most推导的反向过程。</strong></p>
+<p>它的解析过程，从解析树的角度上可以理解成：从Token序列（叶子结点）开始，一步一步推导出其parent结点（非终结符）的过程，最终构建出一颗完整的解析树。</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_4.png" alt=""></p>
+<h2 id="shift-reduce-parsing移位归约解析">Shift-Reduce Parsing（移位归约解析）</h2>
+<p>移位归约解析是Bottom-Top解析的一般策略。</p>
+<p>移位指的是，读取输入的Token序列中的下一个Token（终结符）：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_5.png" alt=""></p>
+<p>归约指的是，对｜符号左侧的最右边的符号逆向使用生产式：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_6.png" alt=""></p>
+<p>之前常用的文法，对其进行移位归约的过程是这样的：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">Grammar：
+  E -&gt; T | T+E
+  T -&gt; int | int*T | (E)
+Token Sequence: int*int+int
+----------------------------------------------
+|int*int+int  Shift
+int|*int+int  Shift
+int*|int+int  Shift
+int*int|+int  Reduce: T-&gt;int
+int*T|+int    Reduce: T-&gt;int*T
+T|+int        Shift
+T+|int        Shift
+T+int|        Reduce: T-&gt;int
+T+T|          Reduce: E-&gt;T
+T+E|          Reduce: E-&gt;T+E
+E|
+</code></pre><p>由于我们只关注位于| 符号左边的子字符串的最右符号，所以它可以用栈来实现：</p>
+<ul>
+<li>进行Shift操作的时候，就往栈中push序列中的下一个token</li>
+<li>进行Reduce操作的时候，就pop出栈内的一些元素，然后逆向使用生产式，把得到的非终结符push到栈中</li>
+</ul>
+<p>如果某次操作既可以进行Shift，也可以进行Reduce，则称为<em><strong>shift-reduce</strong></em> 冲突，通常可以消除。</p>
+<p>如果某次Reduce操作使用两条（或以上）生产式均合法，则成为<em><strong>reduce-reduce</strong></em>冲突，表明文法中可能有重大的问题。</p>
+<h2 id="handles句柄">Handles（句柄）</h2>
+<p>对于上面的例子，如果我们在第一个int处使用 T→ int 进行归约，得到：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">int|*int+int  Reduce: T-&gt;int
+T|*int+int    Shift
+T*|int+int
+</code></pre><p>在得到 T* 之后，就会卡在这里，因为没有任何一个生产式是以T* 开头的。</p>
+<p>所以，只有在一个归约操作完成之后，还能保证后面的归约操作可以正常进行，那么我们才会进行归约。</p>
+<p>于是提出了句柄这个概念：</p>
+<ul>
+<li>句柄是一个归约点，可以通过进一步的归约操作正确解析出开始的非终结符。</li>
+<li>例如 $\alpha \beta \omega \rightarrow \alpha X \omega \rightarrow^* S$ ，$\alpha \beta$ 就是 $\alpha \beta \omega$ 的句柄。</li>
+<li>句柄可以将可归约的地方直观的展示出来，我们只在句柄处进行归约操作。</li>
+</ul>
+<h2 id="可行前缀--item">可行前缀 &amp; Item</h2>
+<p><strong>可行前缀</strong>的定义：$\alpha | \omega$ 如果是移位-归约解析中的一个<strong>可用的状态</strong>的话，那么那么 $\alpha$ 就是一个可行前缀。</p>
+<p>定义它的意义在于：</p>
+<ul>
+<li>可行前缀也是句柄的前缀，它不会延伸到句柄的最右端</li>
+<li>只要栈中有可行前缀，那么就不会出现解析错误</li>
+</ul>
+<p><strong>Bottom-Top解析的最重要一个特点：对于任何文法来说，其可行前缀集可以用正则语言来表示</strong>。</p>
+<p>可行前缀集可以被有限自动机识别，几乎所有的自下而上解析器都是基于这个事实开发的。</p>
+<hr>
+<p><em><strong>item</strong></em> 的定义：指在生产式的右手边某处存在的一个 <code>.</code> 。</p>
+<p>如 T→(E) 的item为：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">T -&gt; .(E)
+T -&gt; (.E)
+T -&gt; (E.)
+T -&gt; (E).
+</code></pre><p>特殊情况下，对于 $T \rightarrow \epsilon$ 这个生产式，其item为 $T \rightarrow .$</p>
+<p>比如，对于 $T \rightarrow (E.)$ 这个item，其意义是：现在栈上的元素有 $(E$ ，我们期望下一个入栈的元素是 $)$ ，<code>.</code> 号左侧记录了栈上已经有的符号，<code>.</code>号右边记录了在能够进行归约操作前希望读取的符号。</p>
+<p>换个角度来说，它也记录了我们处理生产式的进度。</p>
+<hr>
+<p>在解析的过程中，栈上的内容并不是随机的，而一定是某个生产式右手边的前缀：</p>
+<p>$$
+Prefix_1Prefix_2Prefix_3&hellip;Prefix_n
+$$</p>
+<p>如果 $Prefix_i$ 是某生产式 $X_i \rightarrow a_i$ 右手边式子的前缀的话，那么：</p>
+<ul>
+<li>$Prefix_i$ 最终一定会被归约成 $X_i$</li>
+<li>对于其前面的$Prefix_{i-1} $ 来说，$X_{i-1} = a_{i-1} = Prefix_{i-1}X_i\beta$</li>
+<li>由于$Prefix_{i-1}$ 存在于栈上， 这个$X_i\beta$ 就是 $a_{i-1} $ 缺失的部分（<em><strong>missing part</strong></em>）</li>
+</ul>
+<p>所以，$Prefix_{k+1}&hellip;Prefix_n$ 最后一定被归约为 $a_k$ 缺失的部分。</p>
+<p>举例来说，假设现在栈上的元素为$(int*$ ：</p>
+<ul>
+<li>$($ 是生产式 $T \rightarrow (E)$ 的前缀</li>
+<li>$\epsilon$ 是生产式 $E \rightarrow T$ 的前缀</li>
+<li>$int*$ 是生产式 $T \rightarrow int*T$ 的前缀</li>
+</ul>
+<p>当读取了一些输入，$int*$ 一旦被归约为 T 的时候，栈上为 $(T$ ，此时T可以被归约为E，完成之后栈上为$(E$ ，所以，在经过一系列归约操作之后，$int* $ 这部分前缀最终被归约成了生产式 $T\rightarrow(E)$ 缺失的部分。</p>
+<p>如果用一个栈来记录item的话：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">T -&gt; (.E)
+E -&gt; .T
+T -&gt; int*.T
+</code></pre><h2 id="识别可行前缀">识别可行前缀</h2>
+<p>可行前缀可以被FA识别，为了运算方便，我们加入一条额外的生产式：$S^\prime \rightarrow S$ （$S$ 表示文法的起始非终结符）</p>
+<p>首先是对文法建立NFA，它的每一个状态，都是文法中的item，且都是自动机的终止状态（accepting state），如果自动机可以处理完整个栈，那么它就是一个可行的栈。</p>
+<p>根据文法建立NFA有两条基本规则：</p>
+<ul>
+<li>对于状态$E \rightarrow \alpha.X\beta$ （$X$ 可以是终结符或者非终结符），如果栈上此时有$X $ ，那么可以直接进行如下转换：$(E\rightarrow \alpha.X\beta) \rightarrow^X (E\rightarrow\alpha X. \beta)$</li>
+<li>对于状态 $E \rightarrow \alpha.X\beta$ （$X$ 为非终结符，假设 $X\rightarrow \omega$  ），如果此时栈上没有$X$ ，可以进行空跳：$(E\rightarrow \alpha.X\beta) \rightarrow^{\epsilon} (X\rightarrow .\omega)$</li>
+</ul>
+<p>NFA的起始状态为：$S' \rightarrow .S$ ，对于示例文法：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">S' -&gt; E
+E -&gt; T+E | T
+T -&gt; int*T | int | (E)
+</code></pre><p>构建对应NFA的过程如下：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220119_210324.jpg" alt=""></p>
+<p>然后将NFA转换为对应的DFA：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image_7.png" alt=""></p>
+<h2 id="slr解析算法">SLR解析算法</h2>
+<h3 id="basic">Basic</h3>
+<blockquote>
+<p><strong>注意：本节的解析算法只针对SLR(1)文法，它是一种简化版的LR文法。<!-- raw HTML omitted -->SLR的特征是不存在reduce-reduce冲突，可能存在shift-reduce冲突，这个冲突可以使用判定Follow集来解决，如果两种冲突都不存在，也是SLR文法。</strong></p>
+</blockquote>
+<p>DFA的输入就是栈上的元素（从栈底到栈顶扫描），假设下一个输入的token是$t$ ：</p>
+<ul>
+<li>如果DFA的状态s包含item $X \rightarrow \beta. $ 的话，就通过$X\rightarrow \beta$ 进行归约</li>
+<li>如果DFA的状态s包含item $X \rightarrow \beta.t \omega$ 的话，就进行移位，得到$X \rightarrow \beta t. \omega$</li>
+</ul>
+<p>但是这样可能会出现reduce-reduce冲突或者shift-reduce 冲突，比如<a href="https://www.wolai.com/c8iegtUBaYKgKKbx6K347f"></a>中的：</p>
+<pre tabindex="0"><code class="language-纯文本" data-lang="纯文本">E -&gt; T.
+E -&gt; T.+ E
+</code></pre><p>在这个状态中，既可以通过$E \rightarrow T$ 进行归约，但是如果下一个token是 $+$ 号的话，又可以进行移位，所以这里就会产生冲突。</p>
+<p>要解决这个问题也很简单，我们只需在归约前进行判断：$t \in Follow(E)$ ，如果满足条件，就进行归约，反之，则进行移位。</p>
+<p>解析算法如下：</p>
+<ul>
+<li>初始条件：$|x_1x_2x_3&hellip;x_n$$</li>
+<li>不断重复如下操作，直到初始条件为$S'|$$ ：
+<ul>
+<li>利用初始条件初始化栈：$\alpha|\omega$</li>
+<li>按照从栈底到栈顶的顺序，将栈中的元素送入DFA进行判断</li>
+<li>如果在某个状态$s$ 中，DFA接受了来自栈的输入，假设下一个输入的token是$t$ ：
+<ul>
+<li>如果 $(X\rightarrow \beta.) \in s$ 且 $t \in Follow(X)$ ，则Reduce</li>
+<li>如果$(X \rightarrow \beta.t \omega) \in s$ ，则Shift</li>
+<li>其他情况下，解析错误</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>举例说明，解析int*int 的过程如下：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220119_231904_com.newskyer.draw.png" alt=""></p>
+<h3 id="improvements">Improvements</h3>
+<p>当DFA读取整个栈上的符号时，每次只有栈顶的一些符号发生变化，栈中一部分符号实际上是冗余的：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220120_152102_com.newskyer.draw.png" alt=""></p>
+<p>栈中的符号，应该记录各自在DFA中的状态，两者组成一个Pair：</p>
+<p>$$
+&lt;Symbol, state&gt;
+$$</p>
+<p>栈的结构就为：</p>
+<p>$$
+&lt;sym_1, state_1&gt;&lt;sym_2, state_2&gt;&hellip;&lt;sym_n, state_n&gt;
+$$</p>
+<p>其中，$state_n$ 表示其之前所有符号$sym_1&hellip;sym_n$ 在DFA上运行的结果。</p>
+<p>除此之外，栈底应该有一个初始化的Pair：$&lt;any, state_{start}&gt;$ 。</p>
+<p>定义goto表：$goto[i, A] = j$ ，对应状态转换：$state_i \rightarrow^A state_j$ 。</p>
+<p>定义action表，对于DFA的某个状态$s_i$ 和下一个输入的token $t$ ：</p>
+<ul>
+<li>如果$(X \rightarrow \beta.t\omega) \in s_i$ 且$goto[i, t] = j$ ，则$action[i, t] = shift(j)$</li>
+<li>如果$(X \rightarrow \beta.) \in s_i \ \ and \ \ t \in Follow(X) $ 且 $X \neq S'$ ，则$action[i, t] = reduce(X)$</li>
+<li>如果$(S' \rightarrow S) \in s_i$ ，则$action[i, $] = accept$</li>
+<li>其他情况下，$action[i, t] = error$</li>
+</ul>
+<p>完整的算法如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C">input = x1x2x3...xn<span style="color:#a61717;background-color:#e3d2d2">$</span>
+pos = <span style="color:#3677a9">0</span>
+<span style="color:#999;font-style:italic">// assume state 1 has item S&#39;-&gt;S
+</span><span style="color:#999;font-style:italic"></span>stack = &lt;any, <span style="color:#3677a9">1</span>&gt;
+<span style="color:#6ab825;font-weight:bold">while</span>(<span style="color:#24909d">true</span>):
+  <span style="color:#6ab825;font-weight:bold">case</span> action[stack.peek().state, input[pos]]:
+    shift(k): stack.push(&lt;i[pos++], k&gt;)
+    reduce(X-&gt;a): 
+      <span style="color:#6ab825;font-weight:bold">for</span>(<span style="color:#6ab825;font-weight:bold">int</span> i=<span style="color:#3677a9">0</span>; i&lt;a.length(); i++): stack.pop()
+      <span style="color:#999;font-style:italic">// the top element transition with input X
+</span><span style="color:#999;font-style:italic"></span>      stack.push(X, <span style="color:#6ab825;font-weight:bold">goto</span>[stack.peek().state, X]) 
+    accept: <span style="color:#6ab825;font-weight:bold">return</span> accept()
+    error:  <span style="color:#6ab825;font-weight:bold">return</span> error()
+
+</code></pre></div><h1 id="psslr-examples">PS：SLR Examples</h1>
+<p>前面提到，在根据文法构造的DFA中，如果item不存在reduce-reduce冲突，可能存在可以用判定Follow集的方式来解决的shift-reduce冲突的文法，就是SLR文法。</p>
+<p>下面是两个例子：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220121_135613_com.newskyer.draw.png" alt=""></p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/Screenshot_20220121_140930_com.newskyer.draw.png" alt=""></p>
+
+    </div>
+  </article>
+
+  
+  
+
+
+
+
+
+
+  <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/posts">All posts</a></li>
+         
+          <li><a href="/tags">Tags</a></li>
+         
+          <li><a href="/about">About</a></li>
+        
+      </ul>
+    </div>
+
+    
+    <div id="toc-footer" style="display: none">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#intro">Intro</a></li>
+    <li><a href="#重新定义文法">重新定义文法</a></li>
+    <li><a href="#优先级与结合性声明">优先级与结合性声明</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#intro-1">Intro</a></li>
+    <li><a href="#代码实现">代码实现</a></li>
+    <li><a href="#左递归left-recursion">左递归（Left Recursion）</a></li>
+  </ul>
+
+  <ul>
+    <li><a href="#intro--ll1文法">Intro &amp; LL(1)文法</a></li>
+    <li><a href="#构造解析表">构造解析表</a>
+      <ul>
+        <li><a href="#first集">First集</a></li>
+        <li><a href="#follow集">Follow集</a></li>
+        <li><a href="#构造ll1-解析表">构造LL(1) 解析表</a></li>
+      </ul>
+    </li>
+  </ul>
+
+  <ul>
+    <li><a href="#intro-2">Intro</a></li>
+    <li><a href="#shift-reduce-parsing移位归约解析">Shift-Reduce Parsing（移位归约解析）</a></li>
+    <li><a href="#handles句柄">Handles（句柄）</a></li>
+    <li><a href="#可行前缀--item">可行前缀 &amp; Item</a></li>
+    <li><a href="#识别可行前缀">识别可行前缀</a></li>
+    <li><a href="#slr解析算法">SLR解析算法</a>
+      <ul>
+        <li><a href="#basic">Basic</a></li>
+        <li><a href="#improvements">Improvements</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+    </div>
+    
+
+    <div id="share-footer" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f" aria-label="Facebook">
+      <i class="fab fa-facebook fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&text=Compiler%282%29-Parsing" aria-label="Twitter">
+      <i class="fab fa-twitter fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&title=Compiler%282%29-Parsing" aria-label="Linkedin">
+      <i class="fab fa-linkedin fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&is_video=false&description=Compiler%282%29-Parsing" aria-label="Pinterest">
+      <i class="fab fa-pinterest fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=Compiler%282%29-Parsing&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f" aria-label="Email">
+      <i class="fas fa-envelope fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&title=Compiler%282%29-Parsing" aria-label="Pocket">
+      <i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&title=Compiler%282%29-Parsing" aria-label="reddit">
+      <i class="fab fa-reddit fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&name=Compiler%282%29-Parsing&description=Parsing%ef%bc%88%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90%ef%bc%89%20Intro%20to%20parsing%20%e8%af%ad%e6%b3%95%e5%88%86%e6%9e%90%e7%9a%84%e4%bd%9c%e7%94%a8%ef%bc%9a%e6%8e%a5%e5%8f%97%e6%9d%a5%e8%87%aalexer%e7%9a%84token%e5%ba%8f%e5%88%97%ef%bc%8c%e7%84%b6%e5%90%8e%e7%94%9f%e6%88%90%e4%bb%a3%e7%a0%81%e7%9a%84%e8%a7%a3%e6%9e%90%e6%a0%91%ef%bc%8c%e6%a3%80%e6%9f%a5token%e5%ba%8f%e5%88%97%e6%98%af%e5%90%a6%e7%ac%a6%e5%90%88%e8%a7%84%e5%ae%9a%e7%9a%84%e6%96%87%e6%b3%95%e3%80%82%0aContext-Free%20Grammars%ef%bc%88%e4%b8%8a%e4%b8%8b%e6%96%87%e6%97%a0%e5%85%b3%e6%96%87%e6%b3%95%ef%bc%89%20Parser%e9%9c%80%e8%a6%81%e4%b8%80%e7%a7%8d%e6%96%b9%e5%bc%8f%e5%8c%ba%e5%88%ab%e5%93%aa%e4%ba%9btoken%e6%98%af%e5%90%88%e6%b3%95%e7%9a%84%ef%bc%8c%e5%93%aa%e4%ba%9b%e6%98%af%e4%b8%8d%e5%90%88%e6%b3%95%e7%9a%84%e3%80%82%0a%e7%bc%96%e7%a8%8b%e8%af%ad%e8%a8%80%e6%9c%ac%e8%ba%ab%e5%85%b7%e6%9c%89%e8%87%aa%e7%84%b6%e9%80%92%e5%bd%92%e7%9a%84%e7%bb%93%e6%9e%84%ef%bc%8c%e6%af%94%e5%a6%82%e4%b8%80%e4%b8%aa%e8%a1%a8%e8%be%be%e5%bc%8f%ef%bc%9a%0aif%20EXPR%20then%20EXPR%20else%20EXPR%20fi%20--%26gt%3b%20if%20expression%20while%20EXPR%20loop%20EXPR%20pool%20--%26gt%3b%20while%20expression%20%e4%b8%8a%e4%b8%8b%e6%96%87%e6%97%a0%e5%85%b3%e6%96%87%e6%b3%95%e5%b0%b1%e6%98%af%e6%8f%8f%e8%bf%b0%e8%bf%99%e7%a7%8d%e9%80%92%e5%bd%92%e7%bb%93%e6%9e%84%e7%9a%84%e4%b8%80%e7%a7%8d%e8%87%aa%e7%84%b6%e7%ac%a6%e5%8f%b7%e3%80%82%0a%e4%b8%8a%e4%b8%8b%e6%96%87%e6%97%a0%e5%85%b3%e6%96%87%e6%b3%95%e7%9a%84%e7%bb%84%e6%88%90%ef%bc%9a%0a%20%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%ef%bc%88terminals%ef%bc%89%e9%9b%86%e5%90%88%20%24T%24%20%e9%9d%9e%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%ef%bc%88non-terminals%ef%bc%89%e9%9b%86%e5%90%88%20%24N%24%20%e4%b8%80%e4%b8%aa%e8%b5%b7%e5%a7%8b%e7%ac%a6%e5%8f%b7%20%24S%20%5cin%20N%20%24%20%e4%ba%a7%e7%94%9f%e5%bc%8f%ef%bc%88productions%ef%bc%8c%e4%b9%9f%e5%8f%af%e4%bb%a5%e7%90%86%e8%a7%a3%e4%b8%ba%e8%a7%84%e5%88%99%ef%bc%89%e9%9b%86%e5%90%88%20%24X%20%5crightarrow%20Y_1Y_2Y_3%26hellip%3b%20%28%20X%20%5cin%20N%2c%20%5c%20Y%20%5cin%20%28T%20%5c%20%5ccup%20N%20%5c%20%5ccup%20%7b%5cepsilon%7d%20%29%24%20%20%e6%8e%a8%e5%af%bc%e8%bf%87%e7%a8%8b%ef%bc%9a%0a%20%e4%bb%8e%e8%b5%b7%e5%a7%8b%e7%ac%a6%e5%8f%b7%20%24S%24%20%e5%bc%80%e5%a7%8b%e6%8e%a8%e5%af%bc%20%e5%9c%a8%e4%ba%a7%e7%94%9f%e5%bc%8f%e4%b8%ad%e7%94%a8%e5%8f%b3%e8%be%b9%e7%9a%84%20%24Y_n%20%24%20%e6%9b%bf%e6%8d%a2%e6%8e%89%e5%b7%a6%e8%be%b9%e7%9a%84%e9%9d%9e%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%20%24X%24%20%e9%87%8d%e5%a4%8d%ef%bc%882%ef%bc%89%e7%9b%b4%e5%88%b0%e6%b2%a1%e6%9c%89%e9%9d%9e%e7%bb%88%e7%bb%93%e7%ac%a6%e5%8f%b7%20%20%e5%9c%a8%e7%bc%96%e7%a8%8b%e8%af%ad%e8%a8%80%e4%b8%ad%ef%bc%8ctoken%e5%b0%b1%e8%a2%ab%e5%bd%93%e4%bd%9c%e6%98%af%e7%bb%88%e7%bb%93%e7%ac%a6%ef%bc%8c%e4%be%8b%e5%a6%82%ef%bc%9a" aria-label="Tumblr">
+      <i class="fab fa-tumblr fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fcompiler2-parsing%2f&t=Compiler%282%29-Parsing" aria-label="Hacker News">
+      <i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      
+        <a id="menu-toggle" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;" aria-label="Menu">
+          <i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="toc-toggle" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;" aria-label="TOC">
+          <i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share-toggle" class="icon" href="#" onclick="$('#share-footer').toggle();return false;" aria-label="Share">
+          <i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+          <i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+
+  <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2022  Hello World 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+
+  </div>
+</body>
+
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+
+<script src=/js/code-copy.js></script>
+
+
+
+  
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+</html>

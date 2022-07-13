@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>漏洞分析 on Even - A super concise theme for Hugo</title>
+    <link>http://localhost:1313/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</link>
+    <description>Recent content in 漏洞分析 on Even - A super concise theme for Hugo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Fri, 01 Apr 2022 23:30:57 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Spring Core RCE</title>
+      <link>http://localhost:1313/post/spring-core-rce/</link>
+      <pubDate>Fri, 01 Apr 2022 23:30:57 +0800</pubDate>
+      
+      <guid>http://localhost:1313/post/spring-core-rce/</guid>
+      <description>Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修</description>
+    </item>
+    
+  </channel>
+</rss>
