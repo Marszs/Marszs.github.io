@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Compiler on Even - A super concise theme for Hugo</title>
+    <title>Compiler on Welcome to my site!</title>
     <link>http://localhost:1313/tags/compiler/</link>
-    <description>Recent content in Compiler on Even - A super concise theme for Hugo</description>
+    <description>Recent content in Compiler on Welcome to my site!</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Thu, 03 Mar 2022 00:11:58 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/compiler/index.xml" rel="self" type="application/rss+xml" />
@@ -13,7 +13,7 @@
       <pubDate>Thu, 03 Mar 2022 00:11:58 +0800</pubDate>
       
       <guid>http://localhost:1313/post/cs143-compiler/</guid>
-      <description>Stay foolish, stay hungry. CS143是斯坦福开源的编译器课程，口碑非常好，课程目前可以在哔哩哔哩看，配套有相应的assignments（有C++和Java两个</description>
+      <description></description>
     </item>
     
   </channel>

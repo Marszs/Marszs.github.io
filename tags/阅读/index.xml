@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>阅读 on Even - A super concise theme for Hugo</title>
+    <title>阅读 on Welcome to my site!</title>
     <link>http://localhost:1313/tags/%E9%98%85%E8%AF%BB/</link>
-    <description>Recent content in 阅读 on Even - A super concise theme for Hugo</description>
+    <description>Recent content in 阅读 on Welcome to my site!</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Mon, 18 Apr 2022 00:48:19 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/%E9%98%85%E8%AF%BB/index.xml" rel="self" type="application/rss+xml" />
@@ -13,7 +13,7 @@
       <pubDate>Mon, 18 Apr 2022 00:48:19 +0800</pubDate>
       
       <guid>http://localhost:1313/post/goinaction/</guid>
-      <description>第二章 快速开始一个Go程序 第三章 打包和工具链 第四章 数组、切片和映射 在函数间传递是「值传递」，当数组很大的时候这是一个开销很大的操作，这时候可</description>
+      <description>&lt;p&gt;简单记录一下这本书的要点。&lt;/p&gt;</description>
     </item>
     
   </channel>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Hessian二次反序列化与JDK自带HTTP库的内存马 - Even - A super concise theme for Hugo</title>
+  <title>Hessian二次反序列化与JDK自带HTTP库的内存马 - Welcome to my site!</title>
   <meta name="renderer" content="webkit" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
 
@@ -16,7 +16,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="#f8f5ec">
 
 
-<meta name="author" content="" /><meta name="description" content="HFCTF2022 ezchain 二次反序列化 这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到" /><meta name="keywords" content="Hugo, theme, even" />
+<meta name="author" content="" /><meta name="description" content="来自 HFCTF2022 的 ezchain.
+" /><meta name="keywords" content="Hugo, theme, even" />
 
 
 
@@ -40,19 +41,19 @@
 
 
 <meta property="og:title" content="Hessian二次反序列化与JDK自带HTTP库的内存马" />
-<meta property="og:description" content="HFCTF2022 ezchain 二次反序列化 这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到" />
+<meta property="og:description" content="来自 HFCTF2022 的 ezchain." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://localhost:1313/post/hessianmemshell/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2022-03-21T16:32:04+08:00" />
 <meta property="article:modified_time" content="2022-03-21T16:32:04+08:00" />
 
 <meta itemprop="name" content="Hessian二次反序列化与JDK自带HTTP库的内存马">
-<meta itemprop="description" content="HFCTF2022 ezchain 二次反序列化 这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到"><meta itemprop="datePublished" content="2022-03-21T16:32:04+08:00" />
+<meta itemprop="description" content="来自 HFCTF2022 的 ezchain."><meta itemprop="datePublished" content="2022-03-21T16:32:04+08:00" />
 <meta itemprop="dateModified" content="2022-03-21T16:32:04+08:00" />
-<meta itemprop="wordCount" content="1265">
+<meta itemprop="wordCount" content="1268">
 <meta itemprop="keywords" content="Java安全," /><meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Hessian二次反序列化与JDK自带HTTP库的内存马"/>
-<meta name="twitter:description" content="HFCTF2022 ezchain 二次反序列化 这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到"/>
+<meta name="twitter:description" content="来自 HFCTF2022 的 ezchain."/>
 
 <!--[if lte IE 9]>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/classlist/1.1.20170427/classList.min.js"></script>
@@ -139,20 +140,16 @@
   <div class="post-toc-content always-active">
     <nav id="TableOfContents">
   <ul>
-    <li><a href="#hfctf2022-ezchain">HFCTF2022 ezchain</a>
-      <ul>
-        <li><a href="#二次反序列化">二次反序列化</a></li>
-        <li><a href="#内存马">内存马</a></li>
-        <li><a href="#思考">思考</a></li>
-      </ul>
-    </li>
+    <li><a href="#二次反序列化">二次反序列化</a></li>
+    <li><a href="#内存马">内存马</a></li>
+    <li><a href="#总结">总结</a></li>
   </ul>
 </nav>
   </div>
 </div>
     <div class="post-content">
-      <h1 id="hfctf2022-ezchain">HFCTF2022 ezchain</h1>
-<h2 id="二次反序列化">二次反序列化</h2>
+      <p>来自 HFCTF2022 的 ezchain.</p>
+<h1 id="二次反序列化">二次反序列化</h1>
 <p>这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到的解决方法是用 <code>TemplatesImpl</code> 为sink，但是很快发现是不可用的，具体原因为：<code>TemplatesImpl</code> 的 <code>_tfactory</code> 字段为<code> transient</code> 修饰 ，在序列化的过程中会被忽略，和Java原生反序列化不同的是，Hessian 反序列化的时候并不会将这个字段还原，在 <code>defineTransletClasses()</code> 方法中无法将 <code>_bytecodes</code> 中所携带的恶意类的字节码加载到JVM中，最后无法完成实例化。</p>
 <p>但是 Hessian 和 ROME 还是可以完成 getter 方法调用的，现在问题就变成了「可以调用一个类的 <code>getter</code> 方法，如何完成反序列化 RCE？」，在比赛期间是思路是使用 <code>BCEL ClassLoader</code> 或者二次反序列化来做，但是并没有找到合适的 <code>getter</code> 方法，现在想来是比较遗憾的。</p>
 <p>题目的正确做法是使用 <code>java.security.SignedObject</code> 来构造二次反序列化，它可以包装一个序列化对象，对其进行加密签名，反序列化的时候可以验证其是否被修改。它的 <code>getObject()</code> 方法：</p>
@@ -264,7 +261,7 @@
 </span></span><span class="line"><span class="cl"><span class="n">h2o</span><span class="o">.</span><span class="na">flush</span><span class="o">();</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="内存马">内存马</h2>
+</div><h1 id="内存马">内存马</h1>
 <p>题目不出网，要想获得命令执行的回显就需要构造内存马或者操作 <code>linux socket</code> 描述符，题目使用了 JDK 自带了 <code>httpserver</code> 库来搭建 HTTP 服务，这个库并不复杂，所以我觉得可以研究一下内存马的可行性。</p>
 <p>从 Tomcat 内存马的学习经验来看，反射的起点一般是 <code>静态变量</code> 或者 <code>Thread</code> 中隐藏的信息，自带的 HTTP 库的核心实现是在 <code>sun.net.httpserver.ServerImpl</code> 中，并没有什么可用的静态变量，然后发现启动 HTTP 服务的 <code>start()</code> 方法是将一个 <code>dispatcher</code> 对象作为 target 启动了一个新的线程：</p>
 <div class="highlight"><div class="chroma">
@@ -399,9 +396,8 @@
 </span></span><span class="line"><span class="cl"><span class="o">}</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="思考">思考</h2>
+</div><h1 id="总结">总结</h1>
 <p>题目的附件已经归档在了 <a href="https://github.com/F4ded/CTF_backup/tree/master/hfctf2022/ezchain">Github</a>，这道题给我的另一启发就是善用 IDEA 的搜索功能，在使用 <code>cmd + shift + f</code> 搜索功能的时候，一定要点击右下角的 <code>Open in find window</code> ！在浮动窗口搜索的结果不全，而且不便于检索。</p>
-
     </div>
 
     

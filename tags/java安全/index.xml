@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Java安全 on Even - A super concise theme for Hugo</title>
+    <title>Java安全 on Welcome to my site!</title>
     <link>http://localhost:1313/tags/java%E5%AE%89%E5%85%A8/</link>
-    <description>Recent content in Java安全 on Even - A super concise theme for Hugo</description>
+    <description>Recent content in Java安全 on Welcome to my site!</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Fri, 01 Apr 2022 23:30:57 +0800</lastBuildDate><atom:link href="http://localhost:1313/tags/java%E5%AE%89%E5%85%A8/index.xml" rel="self" type="application/rss+xml" />
@@ -13,7 +13,7 @@
       <pubDate>Fri, 01 Apr 2022 23:30:57 +0800</pubDate>
       
       <guid>http://localhost:1313/post/spring-core-rce/</guid>
-      <description>Intro 前段时间的Spring-core RCE传的沸沸扬扬，自己分析完之后觉得并没有pr的那么“核弹”，反而觉得漏洞利用范围其实挺窄的，随着官方修</description>
+      <description></description>
     </item>
     
     <item>
@@ -22,7 +22,7 @@
       <pubDate>Mon, 21 Mar 2022 16:32:04 +0800</pubDate>
       
       <guid>http://localhost:1313/post/hessianmemshell/</guid>
-      <description>HFCTF2022 ezchain 二次反序列化 这道题反序列化使用的是 Hessian ，依赖给的是 ROME ，这两个组合最常见的利用方式就是以 JDBCRowSetImpl 为 sink 的JNDI注入，但是这道题目不出网，最开始想到</description>
+      <description>&lt;p&gt;来自 HFCTF2022 的 ezchain.&lt;/p&gt;</description>
     </item>
     
     <item>
@@ -31,7 +31,7 @@
       <pubDate>Mon, 14 Mar 2022 08:27:22 +0800</pubDate>
       
       <guid>http://localhost:1313/post/%E4%BD%BF%E7%94%A8%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%9E%84%E9%80%A0%E5%AE%8C%E5%85%A8%E4%B8%8D%E5%90%AB%E6%95%B0%E7%BB%84%E7%9A%84gadget/</guid>
-      <description>昨天碰到了这样一个题，有一个反序列化的接口，但是使用了自定义的MyObjectInputStream进行反序列化： 1 2 3 4 5 6 7 8 9 10 11 12 13</description>
+      <description></description>
     </item>
     
     <item>
@@ -40,7 +40,7 @@
       <pubDate>Fri, 11 Mar 2022 11:05:16 +0800</pubDate>
       
       <guid>http://localhost:1313/post/shortenromelength/</guid>
-      <description>原ROME 在上周末的一场 CTF 中，有一道 Java 反序列化题目，环境的依赖是 Rome ，并且给了反序列化的接口，但是对 Base64 编码之后的序列化数据长度限制在 1956 的范围内</description>
+      <description></description>
     </item>
     
   </channel>
